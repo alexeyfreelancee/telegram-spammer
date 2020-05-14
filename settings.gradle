@@ -1,2 +1,3 @@
 rootProject.name='Telegram Spam'
 include ':app'
+include ':libraries:libtd'
