@@ -8,9 +8,12 @@ import com.example.telegramspam.models.Account
 
 @Dao
 interface AccountsDao {
+    @Query("SELECT * FROM accounts_table")
+    fun loadAll() : List<Account>
+
 
     @Query("SELECT * FROM accounts_table")
-    fun loadAll() : LiveData<List<Account>>
+    fun loadAllAsync() : LiveData<List<Account>>
 
     @Insert
     fun insert(account:Account)

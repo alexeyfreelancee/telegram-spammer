@@ -22,7 +22,7 @@ fun Fragment.toast(msg: String) {
     Snackbar.make(this.requireView(), msg, 1500).show()
 }
 
-fun dbDirectory() = "${Environment.getExternalStorageDirectory()}/telegram-bot"
+
 
 
 fun Activity.checkStoragePermission(): Boolean {

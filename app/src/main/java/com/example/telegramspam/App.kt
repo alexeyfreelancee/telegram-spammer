@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.room.Room
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.data.database.AppDatabase
+import com.example.telegramspam.data.telegram.TelegramClientsUtil
 import com.example.telegramspam.ui.accounts.AccountsViewModel
 import com.example.telegramspam.ui.accounts.AccountsViewModelFactory
 import com.example.telegramspam.ui.add_account.AddAccountViewModelFactory
@@ -20,10 +21,10 @@ class App : Application(), KodeinAware {
         bind() from eagerSingleton {
             Room.databaseBuilder(this@App, AppDatabase::class.java, "telegram_spam_db").build()
         }
-
+        bind() from eagerSingleton { TelegramClientsUtil(instance()) }
         bind() from eagerSingleton { Repository(instance()) }
 
         bind() from singleton { AccountsViewModelFactory(instance()) }
-        bind() from singleton { AddAccountViewModelFactory(instance()) }
+        bind() from singleton { AddAccountViewModelFactory(instance(), instance()) }
     }
 }
