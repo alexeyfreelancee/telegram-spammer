@@ -6,4 +6,12 @@
     <string name="send_code">Отправить код</string>
     <string name="proxy_port">Proxy port</string>
     <string name="proxy_ip">Proxy IP</string>
+    <string name="proxy_password">Proxy password</string>
+    <string name="proxy_username">Proxy username</string>
+    <string name="proxy">Proxy</string>
+    <string name="proxy_type">Тип прокси</string>
+    <array name="proxy_types">
+        <item>SOCKS 5</item>
+        <item>HTTP</item>
+    </array>
 </resources>

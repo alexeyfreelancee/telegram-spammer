@@ -1,16 +1,14 @@
 package com.example.telegramspam.ui.accounts
 
-import androidx.lifecycle.ViewModelProviders
+import android.app.AlertDialog
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
-
 import com.example.telegramspam.R
 import com.example.telegramspam.adapters.AccountsListAdapter
 import com.example.telegramspam.databinding.AccountsFragmentBinding
@@ -35,27 +33,57 @@ class AccountsFragment : Fragment(), KodeinAware {
             lifecycleOwner = viewLifecycleOwner
         }
         setupAccounts()
+        setupDeleteDialog()
         return binding.root
     }
 
-    private fun setupAccounts(){
+    private fun setupAccounts() {
         val adapter = AccountsListAdapter(viewModel)
         binding.accountsList.adapter = adapter
         viewModel.accounts.observe(viewLifecycleOwner, Observer {
             adapter.submitList(it)
         })
     }
+
+    private fun setupDeleteDialog() {
+        viewModel.openDeleteDialog.observe(viewLifecycleOwner, Observer {
+            val id = it.peekContent()
+            AlertDialog.Builder(requireContext())
+                .setTitle("Удалить аккаунт")
+                .setMessage("Вы уверены что хотите удалить аккаунт?")
+                .setNegativeButton(
+                    "Нет"
+                ) { dialog, _ -> dialog.dismiss() }
+                .setPositiveButton(
+                    "Да"
+                ) { dialog, _ ->
+                    viewModel.deleteAccount(id)
+                    dialog.dismiss()
+                }.show()
+        })
+
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         val navController = Navigation.findNavController(view)
         viewModel.openAccount.observe(viewLifecycleOwner, Observer {
-            navController.navigate(R.id.action_accountsFragment_to_currentAccountFragment, bundleOf(
-                ACCOUNT_ID to it.peekContent()
-            ))
+            if (!it.hasBeenHandled) {
+                val bundle = Bundle()
+                bundle.putInt(ACCOUNT_ID, it.peekContent())
+                navController.navigate(
+                    R.id.action_accountsFragment_to_currentAccountFragment,
+                    bundle
+                )
+            }
         })
         viewModel.addAccount.observe(viewLifecycleOwner, Observer {
-            navController.navigate(R.id.action_accountsFragment_to_addAccountFragment)
+            if (!it.hasBeenHandled) {
+                it.peekContent()
+                navController.navigate(R.id.action_accountsFragment_to_addAccountFragment)
+            }
+
+
         })
     }
 

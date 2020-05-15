@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.telegramspam.databinding.AccountRowBinding
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.ui.accounts.AccountsViewModel
+import com.example.telegramspam.utils.log
 
 class AccountsListAdapter(private val viewModel: AccountsViewModel) :
     RecyclerView.Adapter<AccountsListAdapter.AccountViewHolder>() {
@@ -21,9 +22,16 @@ class AccountsListAdapter(private val viewModel: AccountsViewModel) :
 
     inner class AccountViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(account: Account) {
-            DataBindingUtil.bind<AccountRowBinding>(itemView)?.apply {
+            val binding = DataBindingUtil.bind<AccountRowBinding>(itemView)?.apply {
                 this.account = account
                 this.viewmodel = viewModel
+            }
+            binding?.linear?.setOnLongClickListener {
+                viewModel.openDeleteDialog(account.id)
+                return@setOnLongClickListener true
+            }
+            binding?.linear?.setOnClickListener {
+                viewModel.openAccount(account.id)
             }
         }
     }

@@ -4,11 +4,10 @@ import android.app.Application
 import androidx.room.Room
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.data.database.AppDatabase
-import com.example.telegramspam.data.telegram.TelegramClientsUtil
-import com.example.telegramspam.ui.accounts.AccountsViewModel
+import com.example.telegramspam.data.TelegramAccountsHelper
 import com.example.telegramspam.ui.accounts.AccountsViewModelFactory
 import com.example.telegramspam.ui.add_account.AddAccountViewModelFactory
-import org.drinkless.td.libcore.telegram.Client
+import com.example.telegramspam.ui.current_account.CurrentAccountViewModelFactory
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.generic.bind
@@ -19,12 +18,15 @@ import org.kodein.di.generic.singleton
 class App : Application(), KodeinAware {
     override val kodein = Kodein.lazy {
         bind() from eagerSingleton {
-            Room.databaseBuilder(this@App, AppDatabase::class.java, "telegram_spam_db").build()
+            Room.databaseBuilder(this@App, AppDatabase::class.java, "telegram_spam_db")
+                .fallbackToDestructiveMigration()
+                .build()
         }
-        bind() from eagerSingleton { TelegramClientsUtil(instance()) }
-        bind() from eagerSingleton { Repository(instance()) }
+        bind() from eagerSingleton { TelegramAccountsHelper(instance()) }
+        bind() from eagerSingleton { Repository(instance(), instance()) }
 
         bind() from singleton { AccountsViewModelFactory(instance()) }
-        bind() from singleton { AddAccountViewModelFactory(instance(), instance()) }
+        bind() from singleton { AddAccountViewModelFactory(instance()) }
+        bind() from singleton { CurrentAccountViewModelFactory(instance()) }
     }
 }

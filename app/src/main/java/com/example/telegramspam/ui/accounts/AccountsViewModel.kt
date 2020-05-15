@@ -3,20 +3,33 @@ package com.example.telegramspam.ui.accounts
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.utils.Event
+import com.example.telegramspam.utils.log
+import kotlinx.coroutines.launch
 
 class AccountsViewModel(private val repository: Repository) : ViewModel() {
     val accounts = repository.loadAccounts()
 
-    val openAccount = MutableLiveData<Event<String>>()
+    val openAccount = MutableLiveData<Event<Int>>()
     val addAccount = MutableLiveData<Event<String>>()
+    val openDeleteDialog = MutableLiveData<Event<Int>>()
 
+
+    fun openDeleteDialog(id:Int){
+        openDeleteDialog.value = Event(id)
+    }
+
+    fun deleteAccount(id:Int) = viewModelScope.launch{
+        repository.deleteAccount(id)
+    }
     fun addAccount(){
         addAccount.value = Event("hello world")
     }
 
-    fun openAccount(id:String){
+    fun openAccount(id:Int){
+        log("clicked account $id")
         openAccount.value = Event(id)
     }
 }

@@ -6,28 +6,50 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 
 import com.example.telegramspam.R
+import com.example.telegramspam.databinding.CurrentAccountFragmentBinding
+import com.example.telegramspam.ui.dialogs.ProxyDialog
+import com.example.telegramspam.utils.ACCOUNT_ID
+import com.example.telegramspam.utils.log
+import org.kodein.di.KodeinAware
+import org.kodein.di.android.x.kodein
+import org.kodein.di.generic.instance
 
-class CurrentAccountFragment : Fragment() {
-
-    companion object {
-        fun newInstance() = CurrentAccountFragment()
-    }
-
+class CurrentAccountFragment : Fragment(), KodeinAware {
+    override val kodein by kodein()
+    private val factory by instance<CurrentAccountViewModelFactory>()
+    private lateinit var binding : CurrentAccountFragmentBinding
     private lateinit var viewModel: CurrentAccountViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.current_account_fragment, container, false)
+        viewModel = ViewModelProvider(this, factory).get(CurrentAccountViewModel::class.java)
+        binding = CurrentAccountFragmentBinding.inflate(inflater, container, false).apply {
+            viewmodel = viewModel
+            lifecycleOwner = viewLifecycleOwner
+        }
+        setupViewModel()
+        return binding.root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(CurrentAccountViewModel::class.java)
-        // TODO: Use the ViewModel
+    private fun setupViewModel(){
+        arguments?.let { args->
+            val accountId = args.getInt(ACCOUNT_ID, 0)
+            log("accountId $accountId")
+            viewModel.setupAccount(accountId)
+        }
+        viewModel.openProxyDialog.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                val dialog = ProxyDialog(requireContext(), viewModel)
+                dialog.show()
+            }
+
+        })
     }
 
 }

@@ -9,7 +9,10 @@ data class Account(
     val id: Int = 0,
     val username: String = "",
     val phoneNumber: String = "",
-    val proxyIp: String? = "",
-    val proxyPort: Int? = 0,
-    val databasePath:String = ""
+    var proxyIp: String = "",
+    var proxyPort: Int = 0,
+    var proxyUsername:String = "",
+    var proxyPassword:String = "",
+    var proxyType:String ="",
+    var databasePath:String = ""
 )

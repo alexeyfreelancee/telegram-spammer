@@ -3,73 +3,99 @@ package com.example.telegramspam.ui.add_account
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.example.telegramspam.data.Repository
-import com.example.telegramspam.data.telegram.TelegramClientsUtil
-import com.example.telegramspam.utils.ENTER_CODE
-import com.example.telegramspam.utils.ENTER_PHONE
-import com.example.telegramspam.utils.Event
+import com.example.telegramspam.data.TelegramAccountsHelper
+import com.example.telegramspam.utils.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.drinkless.td.libcore.telegram.TdApi
 
 class AddAccountViewModel(
-    private val repository: Repository,
-    private val telegramClientsUtil: TelegramClientsUtil
+    private val repository: Repository
 ) : ViewModel() {
     val code = MutableLiveData("")
     val phone = MutableLiveData("")
-    val error = MutableLiveData<Event<String>>()
     val proxyIp = MutableLiveData<String>()
     val proxyPort = MutableLiveData<String>()
-    val success = MutableLiveData<Event<TdApi.User>>()
+    val proxyUsername = MutableLiveData("")
+    val proxyPassword = MutableLiveData("")
+    val proxyType = MutableLiveData("")
+
     private val databasePath = repository.createDatabasePath()
+    lateinit var listener: AuthorizationListener
 
-    init {
-        telegramClientsUtil.startAuthentication(databasePath, success, error)
+
+    fun startAuth(listener: AuthorizationListener){
+        this.listener = listener
+        repository.startAuthentication(databasePath, listener)
     }
-
-    fun confirm() {
-        if (checkEmpty(true)) {
-            telegramClientsUtil.confirm(code.value!!, databasePath)
+    fun confirm() = viewModelScope.launch {
+        if (checkFields(true)) {
+            repository.finishAuthentication(
+                code.value!!,
+                databasePath,
+                listener
+            )
         }
     }
 
-    fun sendCode() {
-        if (checkEmpty(false)) {
-            telegramClientsUtil.sendSms(phone.value!!, databasePath)
+    fun sendCode() = viewModelScope.launch {
+        if (checkFields(false)) {
+            repository.enterPhoneNumber(
+                databasePath,
+                phone.value!!,
+                listener
+            )
         }
     }
 
-    private fun checkEmpty(checkCode: Boolean): Boolean {
-        if (code.value.isNullOrEmpty() && checkCode) {
-            error.value = Event(ENTER_CODE)
-            return false
-        } else if (phone.value.isNullOrEmpty()) {
-            error.value = Event(ENTER_PHONE)
-            return false
+    private suspend fun checkFields(checkCode: Boolean): Boolean {
+        return withContext(CoroutineScope(Dispatchers.Main).coroutineContext) {
+            if (phone.value.isNullOrEmpty()) {
+                listener.error(ENTER_PHONE)
+                return@withContext false
+            } else if (!phone.value!!.startsWith("+")) {
+                listener.error(WRONG_PHONE)
+                return@withContext false
+            } else if (repository.checkNotExists(phone.value!!)) {
+                listener.error(ALREADY_EXISTS)
+                return@withContext false
+            } else if (code.value.isNullOrEmpty() && checkCode) {
+                listener.error(ENTER_CODE)
+                return@withContext false
+            }
+            return@withContext true
         }
-        return true
     }
 
 
-    fun saveUser(user: TdApi.User) {
-        repository.saveUser(
+     fun saveUser(user: TdApi.User) {
+        repository.saveAccount(
             user,
             proxyIp.value,
             proxyPort.value?.toInt(),
+            proxyUsername.value!!,
+            proxyPassword.value!!,
+            proxyType.value!!,
             databasePath
         )
     }
+
+
 
 }
 
 @Suppress("UNCHECKED_CAST")
 class AddAccountViewModelFactory(
-    private val repository: Repository,
-    private val telegramClientsUtil: TelegramClientsUtil
+    private val repository: Repository
 ) : ViewModelProvider.NewInstanceFactory() {
 
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         return AddAccountViewModel(
-            repository, telegramClientsUtil
+            repository
         ) as T
     }
 
