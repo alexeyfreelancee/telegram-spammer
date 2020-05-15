@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/accountsFragment">
+
+    <fragment
+        android:id="@+id/accountsFragment"
+        android:name="com.example.telegramspam.ui.accounts.AccountsFragment"
+        android:label="AccountsFragment" >
+        <action
+            android:id="@+id/action_accountsFragment_to_addAccountFragment"
+            app:destination="@id/addAccountFragment" />
+        <action
+            android:id="@+id/action_accountsFragment_to_currentAccountFragment"
+            app:destination="@id/currentAccountFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/addAccountFragment"
+        android:name="com.example.telegramspam.ui.add_account.AddAccountFragment"
+        android:label="add_account_fragment"
+        tools:layout="@layout/add_account_fragment" >
+        <action
+            android:id="@+id/action_addAccountFragment_to_accountsFragment"
+            app:destination="@id/accountsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/currentAccountFragment"
+        android:name="com.example.telegramspam.ui.current_account.CurrentAccountFragment"
+        android:label="current_account_fragment"
+        tools:layout="@layout/current_account_fragment" />
+</navigation>

@@ -7,6 +7,8 @@ import android.os.Environment
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
+import androidx.fragment.app.Fragment
+import com.google.android.material.snackbar.Snackbar
 
 fun log(vararg messages: Any?) {
     messages.forEach { msg ->
@@ -14,6 +16,10 @@ fun log(vararg messages: Any?) {
             Log.d("MEONER", msg.toString())
         }
     }
+}
+
+fun Fragment.toast(msg: String) {
+    Snackbar.make(this.requireView(), msg, 1500).show()
 }
 
 fun dbDirectory() = "${Environment.getExternalStorageDirectory()}/telegram-bot"
@@ -36,7 +42,7 @@ fun Activity.checkStoragePermission(): Boolean {
             )
         }
         return false
-    } else{
+    } else {
         return true
     }
 }

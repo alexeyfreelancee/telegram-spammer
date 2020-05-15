@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Telegram Spam</string>
+    <string name="no_accs">Пока нет ни одного акканута</string>
+    <string name="phone_number">Номер телефона</string>
+    <string name="sms_code">Код из смс</string>
+    <string name="send_code">Отправить код</string>
+    <string name="proxy_port">Proxy port</string>
+    <string name="proxy_ip">Proxy IP</string>
 </resources>
