@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
 import android.util.Log
+import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.Fragment
@@ -22,6 +23,10 @@ fun Fragment.toast(msg: String) {
     Snackbar.make(this.requireView(), msg, 1500).show()
 }
 
+
+fun View.toast(msg: String) {
+    Snackbar.make(this, msg, 1500).show()
+}
 
 
 

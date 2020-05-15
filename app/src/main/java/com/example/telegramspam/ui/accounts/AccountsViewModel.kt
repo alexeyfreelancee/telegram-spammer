@@ -29,7 +29,6 @@ class AccountsViewModel(private val repository: Repository) : ViewModel() {
     }
 
     fun openAccount(id:Int){
-        log("clicked account $id")
         openAccount.value = Event(id)
     }
 }

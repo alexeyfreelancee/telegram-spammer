@@ -1,10 +1,13 @@
 package com.example.telegramspam.data
 
 import android.os.Environment
+import android.view.View
 import androidx.lifecycle.LiveData
 import com.example.telegramspam.data.database.AppDatabase
 import com.example.telegramspam.models.Account
+import com.example.telegramspam.models.Settings
 import com.example.telegramspam.utils.AuthorizationListener
+import com.example.telegramspam.utils.UsersLoadingListener
 import com.example.telegramspam.utils.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,11 +18,41 @@ import java.util.concurrent.ThreadLocalRandom
 
 class Repository(private val db: AppDatabase, private val telegram: TelegramAccountsHelper) {
 
+    fun loadAccountList(settings: Settings, listener: UsersLoadingListener, view: View) {
+        val list = settings.groups.split(",")
+        val resultList = ArrayList<String>()
+        val client = telegram.getByDbPath(settings.dbPath)
+        if(client!=null){
+            list.forEach {
+               
+            }
+        }
+
+        val users = StringBuilder()
+        resultList.forEach {
+            users.append("$it,")
+        }
+
+        listener.loaded(users.toString().dropLast(1), view)
+    }
+
+
+    suspend fun loadSettings(dbPath: String): Settings? {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            db.settingsDao().loadByPath(dbPath)
+        }
+    }
+
+    suspend fun saveSettings(settings: Settings) {
+        CoroutineScope(Dispatchers.IO).launch {
+            db.settingsDao().insert(settings)
+        }
+    }
+
     fun deleteAccount(id: Int) {
         CoroutineScope(Dispatchers.IO).launch {
             db.accountsDao().delete(id)
         }
-
     }
 
     suspend fun loadAccount(accountId: Int): Account {
@@ -35,6 +68,7 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
         proxyPort: Int,
         username: String,
         pass: String,
+        proxyType: String,
         databasePath: String
     ) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -43,12 +77,12 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
                 this.proxyPort = proxyPort
                 this.proxyUsername = username
                 this.proxyPassword = pass
+                this.proxyType = proxyType
             }
-            telegram.addProxy(databasePath, proxyIp, proxyPort, username, pass)
+            log("updated proxy $proxyIp:$proxyPort  type = $proxyType")
+            telegram.addProxy(databasePath, proxyIp, proxyPort, username, pass, proxyType)
             db.accountsDao().insert(account)
         }
-
-
     }
 
     fun createDatabasePath(): String {
@@ -97,7 +131,7 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
         proxyPort: Int? = null,
         proxyUsername: String = "",
         proxyPassword: String = "",
-        proxyType:String = "",
+        proxyType: String = "",
         databasePath: String
     ) {
         val account = if (proxyIp.isNullOrEmpty() && proxyPort == null) {

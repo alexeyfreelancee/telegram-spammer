@@ -29,5 +29,14 @@
         android:id="@+id/currentAccountFragment"
         android:name="com.example.telegramspam.ui.current_account.CurrentAccountFragment"
         android:label="current_account_fragment"
-        tools:layout="@layout/current_account_fragment" />
+        tools:layout="@layout/current_account_fragment" >
+        <action
+            android:id="@+id/action_currentAccountFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.telegramspam.ui.settings.SettingsFragment"
+        android:label="settings_fragment"
+        tools:layout="@layout/settings_fragment" />
 </navigation>

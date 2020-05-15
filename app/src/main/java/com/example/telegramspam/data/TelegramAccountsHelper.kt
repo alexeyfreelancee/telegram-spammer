@@ -36,6 +36,9 @@ class TelegramAccountsHelper(private val db: AppDatabase) {
         }
     }
 
+    fun getByDbPath(dbPath: String): Client?{
+        return clients[dbPath]
+    }
     fun addProxy(
         databasePath: String,
         proxyIp: String,
@@ -45,10 +48,8 @@ class TelegramAccountsHelper(private val db: AppDatabase) {
         proxyType: String
     ) {
         val type = if (proxyType == SOCKS5) {
-            log("socks 5 proxy added")
             TdApi.ProxyTypeSocks5(proxyUsername, proxyPass)
         } else {
-            log("http proxy added")
             TdApi.ProxyTypeHttp(proxyUsername, proxyPass, false)
         }
         clients[databasePath]?.send(

@@ -1,17 +1,19 @@
 package com.example.telegramspam.ui.add_account
 
+import android.view.View
+import android.widget.AdapterView
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.telegramspam.data.Repository
-import com.example.telegramspam.data.TelegramAccountsHelper
 import com.example.telegramspam.utils.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.drinkless.td.libcore.telegram.TdApi
+
 
 class AddAccountViewModel(
     private val repository: Repository
@@ -41,6 +43,8 @@ class AddAccountViewModel(
             )
         }
     }
+
+
 
     fun sendCode() = viewModelScope.launch {
         if (checkFields(false)) {

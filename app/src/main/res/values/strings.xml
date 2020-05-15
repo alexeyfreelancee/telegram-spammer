@@ -10,6 +10,22 @@
     <string name="proxy_username">Proxy username</string>
     <string name="proxy">Proxy</string>
     <string name="proxy_type">Тип прокси</string>
+    <string name="settings">Настройки</string>
+    <string name="start_spam">Начать спам</string>
+    <string name="groups">Группы</string>
+    <string name="hidden_status">Скрытый статус</string>
+    <string name="have_photo">Есть фото</string>
+    <string name="get_list_now">Получить список сейчас</string>
+    <array name="last_online">
+        <item>Сейчас онлайн</item>
+        <item>Пол часа назад</item>
+        <item>Час назад</item>
+        <item>Три часа назад</item>
+        <item>Двенадцать часов назад</item>
+        <item>День назад</item>
+        <item>Три дня назад</item>
+        <item>Неделю назад</item>
+    </array>
     <array name="proxy_types">
         <item>SOCKS 5</item>
         <item>HTTP</item>

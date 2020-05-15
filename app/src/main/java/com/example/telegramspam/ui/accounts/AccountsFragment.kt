@@ -12,7 +12,8 @@ import androidx.navigation.Navigation
 import com.example.telegramspam.R
 import com.example.telegramspam.adapters.AccountsListAdapter
 import com.example.telegramspam.databinding.AccountsFragmentBinding
-import com.example.telegramspam.utils.ACCOUNT_ID
+
+import com.example.telegramspam.utils.ACC_ID
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
 import org.kodein.di.generic.instance
@@ -70,7 +71,7 @@ class AccountsFragment : Fragment(), KodeinAware {
         viewModel.openAccount.observe(viewLifecycleOwner, Observer {
             if (!it.hasBeenHandled) {
                 val bundle = Bundle()
-                bundle.putInt(ACCOUNT_ID, it.peekContent())
+                bundle.putInt(ACC_ID, it.peekContent())
                 navController.navigate(
                     R.id.action_accountsFragment_to_currentAccountFragment,
                     bundle
