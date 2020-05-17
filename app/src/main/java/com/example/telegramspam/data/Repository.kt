@@ -23,6 +23,23 @@ import java.util.concurrent.ThreadLocalRandom
 
 
 class Repository(private val db: AppDatabase, private val telegram: TelegramAccountsHelper) {
+    fun removeFile(position: Int, settings: Settings?) :String{
+        return if(settings!=null){
+            val files = ArrayList<String>()
+            settings.files.split(",").forEach {
+                if(it.length > 3)files.add(it)
+            }
+            val result = java.lang.StringBuilder()
+            files.removeAt(position)
+
+            files.forEach {
+                result.append("$it,")
+            }
+            result.toString().dropLast(1)
+        } else{
+            ""
+        }
+    }
     fun checkSettings(settings: Settings?, beforeSpam:Boolean) : Boolean{
         if(settings !=null){
             return if(beforeSpam){
@@ -39,7 +56,7 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
     }
     fun loadFilePaths(data: Intent, context: Context) : String{
         val pathList = ArrayList<String>()
-        if (data.clipData != null && data.clipData!!.itemCount <= 5) {
+        if (data.clipData != null) {
             for (i in 0 until data.clipData!!.itemCount) {
                 pathList.add(data.clipData!!.getItemAt(i).uri.getPath(context))
             }
@@ -67,6 +84,8 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
                         if (type is TdApi.ChatTypeSupergroup) {
                             parseUsersFromChat(client, type, settings, listener)
                         }
+                    } else if(chat is TdApi.Error){
+                        listener.loaded("", false)
                     }
                 }
             }
@@ -79,40 +98,49 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
         settings: Settings,listener: UsersLoadingListener
     ) {
         client.send(TdApi.GetSupergroupMembers(type.supergroupId, null, 0, 200)) { members ->
-            var offset = 0
-            var counter1 = 0
-            val count1 = (members as TdApi.ChatMembers).totalCount / 200
-            val resultList = HashSet<String>()
-            for (i in 0..count1) {
-                client.send(
-                    TdApi.GetSupergroupMembers(
-                        type.supergroupId,
-                        null,
-                        offset,
-                        200
-                    )
-                ) { result ->
-                    if (result is TdApi.ChatMembers) {
-                        var counter2 = 0
-                        val count2 = result.members.size
+            if(members is TdApi.ChatMembers){
+                var offset = 0
+                var counter1 = 0
+                val count1 = members.totalCount / 200
+                val resultList = HashSet<String>()
+                for (i in 0..count1) {
+                    client.send(
+                        TdApi.GetSupergroupMembers(
+                            type.supergroupId,
+                            null,
+                            offset,
+                            200
+                        )
+                    ) { result ->
+                        if (result is TdApi.ChatMembers) {
+                            var counter2 = 0
+                            val count2 = result.members.size
 
-                        result.members.forEach {
-                            client.send(TdApi.GetUser(it.userId)) { user ->
-                                if (user is TdApi.User) {
-                                    counter2+=1
-                                    log("counter1 $counter1 and count1 $count1")
-                                    log("counter2 $counter2 and count2 $count2")
-                                    val lastRun = counter1 >= count1 && counter2 >= count2
-                                    checkUserBySettings(settings, user, resultList, lastRun,listener)
+                            result.members.forEach {
+                                client.send(TdApi.GetUser(it.userId)) { user ->
+                                    if (user is TdApi.User) {
+                                        counter2+=1
+                                        log("counter1 $counter1 and count1 $count1")
+                                        log("counter2 $counter2 and count2 $count2")
+                                        val lastRun = counter1 >= count1 && counter2 >= count2
+                                        checkUserBySettings(settings, user, resultList, lastRun,listener)
+                                    } else if(user is TdApi.Error){
+                                        listener.loaded("", false)
+                                    }
+
                                 }
-
                             }
+                        } else if(result is TdApi.Error){
+                            listener.loaded("", false)
                         }
+                        counter1+=1
                     }
-                    counter1+=1
+                    offset += 200
                 }
-                offset += 200
+            } else if(members is TdApi.Error){
+                listener.loaded("", false)
             }
+
         }
 
 
@@ -141,7 +169,7 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
             resultList.forEach { username ->
                 users.append("$username,")
             }
-            listener.loaded(users.toString().dropLast(1))
+            listener.loaded(users.toString().dropLast(1), true)
         }
     }
 

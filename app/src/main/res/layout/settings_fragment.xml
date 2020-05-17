@@ -29,7 +29,7 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp"
+                android:padding="8dp"
                 tools:context=".ui.settings.SettingsFragment">
 
                 <LinearLayout
@@ -127,73 +127,89 @@
 
 
                     <RelativeLayout
+                        android:id="@+id/photos"
                         android:padding="8dp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
                         <ImageView
+                            android:onClick="@{(view)->viewmodel.removeFile(0)}"
+                            android:scaleType="centerCrop"
                             android:layout_marginBottom="8dp"
                             android:layout_marginEnd="8dp"
                             android:id="@+id/first"
                             android:layout_width="50dp"
                             android:layout_height="50dp"
-                            app:file="@{viewmodel.settings.files}" />
+                            app:file="@{viewmodel.files}" />
 
                         <ImageView
+                            android:onClick="@{(view)->viewmodel.removeFile(1)}"
+                            android:scaleType="centerCrop"
                             android:layout_marginEnd="8dp"
                             android:id="@+id/second"
                             android:layout_width="50dp"
                             android:layout_height="50dp"
                             android:layout_toEndOf="@id/first"
-                            app:file="@{viewmodel.settings.files}" />
+                            app:file="@{viewmodel.files}" />
 
                         <ImageView
+                            android:onClick="@{(view)->viewmodel.removeFile(2)}"
+                            android:scaleType="centerCrop"
                             android:layout_marginEnd="8dp"
                             android:id="@+id/third"
                             android:layout_width="50dp"
                             android:layout_height="50dp"
                             android:layout_toEndOf="@id/second"
-                            app:file="@{viewmodel.settings.files}" />
+                            app:file="@{viewmodel.files}" />
 
                         <ImageView
+                            android:onClick="@{(view)->viewmodel.removeFile(3)}"
+                            android:scaleType="centerCrop"
                             android:id="@+id/fourth"
                             android:layout_width="50dp"
                             android:layout_height="50dp"
                             android:layout_toEndOf="@id/third"
-                            app:file="@{viewmodel.settings.files}" />
+                            app:file="@{viewmodel.files}" />
 
                         <ImageView
+                            android:onClick="@{(view)->viewmodel.removeFile(4)}"
                             android:id="@+id/fifth"
-
+                            android:scaleType="centerCrop"
                             android:layout_width="50dp"
                             android:layout_height="50dp"
                             android:layout_below="@id/first"
-                            app:file="@{viewmodel.settings.files}" />
+                            app:file="@{viewmodel.files}" />
 
                         <ImageView
+                            android:onClick="@{(view)->viewmodel.removeFile(5)}"
+                            android:scaleType="centerCrop"
                             android:id="@+id/sixth"
                             android:layout_width="50dp"
                             android:layout_marginEnd="8dp"
                             android:layout_height="50dp"
                             android:layout_below="@id/first"
                             android:layout_toEndOf="@id/first"
-                            app:file="@{viewmodel.settings.files}" />
+                            app:file="@{viewmodel.files}" />
 
                         <ImageView
+                            android:onClick="@{(view)->viewmodel.removeFile(6)}"
+                            android:scaleType="centerCrop"
                             android:id="@+id/seventh"
                             android:layout_width="50dp"
                             android:layout_height="50dp"
                             android:layout_below="@id/first"
                             android:layout_toEndOf="@id/sixth"
-                            app:file="@{viewmodel.settings.files}" />
+                            app:file="@{viewmodel.files}" />
 
                         <ImageView
+                            android:onClick="@{(view)->viewmodel.removeFile(7)}"
+                            android:scaleType="centerCrop"
                             android:layout_toEndOf="@id/third"
                             android:id="@+id/eighth"
                             android:layout_width="50dp"
                             android:layout_height="50dp"
                             android:layout_below="@id/first"
-                            app:file="@{viewmodel.settings.files}" />
+                            app:file="@{viewmodel.files}" />
 
                     </RelativeLayout>
                 </LinearLayout>

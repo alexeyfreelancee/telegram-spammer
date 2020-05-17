@@ -22,10 +22,16 @@ fun setPhoneNumber(textView: TextView, phoneNumber:String?){
 @BindingAdapter("file")
 fun setFile(view: ImageView, stringFiles:String?){
     if(stringFiles!=null){
-        val files = stringFiles.split(",")
+        val files = ArrayList<String>()
+        stringFiles.split(",").forEach {
+            if(it.length > 3){
+                files.add(it)
+            }
+        }
+        log(files.size)
         when(view.id){
             R.id.first ->{
-                if(files.size > 0 && files[0].isNotEmpty()){
+                if(files.isNotEmpty() && files[0].isNotEmpty()){
                     view.loadFile(files[0])
                 }else{
                     view.gone()
@@ -92,13 +98,7 @@ fun ImageView.loadFile(path:String){
         .into(this)
 }
 
-fun View.gone(){
-    this.visibility = View.GONE
-}
 
-fun View.visible(){
-    this.visibility = View.VISIBLE
-}
 @BindingAdapter(value = ["selectedValue", "selectedValueAttrChanged"], requireAll = false)
 fun bindSpinnerData(
     spinner: Spinner,

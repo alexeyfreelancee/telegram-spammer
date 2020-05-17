@@ -13,8 +13,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.telegramspam.R
 import com.example.telegramspam.databinding.SettingsFragmentBinding
-import com.example.telegramspam.utils.DB_PATH
-import com.example.telegramspam.utils.toast
+import com.example.telegramspam.utils.*
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
 import org.kodein.di.generic.instance
@@ -65,6 +64,7 @@ class SettingsFragment : Fragment(), KodeinAware {
                 toast(it.peekContent())
             }
         })
+
         viewModel.settings.observe(viewLifecycleOwner, Observer {
             when (it.maxOnlineDifference) {
                 (60 * 60).toLong() -> binding.spinner.setSelection(1)

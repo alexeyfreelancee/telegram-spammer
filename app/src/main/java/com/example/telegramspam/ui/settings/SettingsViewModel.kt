@@ -22,13 +22,17 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
     val lastOnline = MutableLiveData("")
     val toast = MutableLiveData<Event<String>>()
     val usersLoaded = MutableLiveData<Event<String>>()
+    val files = MutableLiveData<String>()
+
     private var dbPath = ""
     private var loaded = false
     fun loadSettings(dbPath: String) = viewModelScope.launch {
 
         this@SettingsViewModel.dbPath = dbPath
         val settings = repository.loadSettings(dbPath) ?: Settings()
+        log(settings)
         settings.dbPath = dbPath
+        files.value = settings.files
         _settings.value = settings
     }
 
@@ -43,43 +47,70 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
     }
 
     fun loadList(view: View) {
-        if (repository.checkSettings(settings.value,false)) {
+        if (repository.checkSettings(settings.value, false)) {
             dataLoading.value = true
             loaded = false
             Handler().postDelayed({
-                if(!loaded){
+                if (!loaded) {
                     dataLoading.value = false
                     toast.value = Event("Ошибка :(")
                 }
             }, 20000)
             repository.loadAccountList(settings.value!!, this)
-        } else{
+        } else {
             toast.value = Event("Введите чаты")
         }
     }
 
-    override fun loaded(users: String) {
+    override fun loaded(users: String, success: Boolean) {
         viewModelScope.launch {
             loaded = true
             dataLoading.value = false
-            usersLoaded.value = Event(users)
+            if (success) {
+                toast.value = Event("Ошибка :(")
+            } else {
+                usersLoaded.value = Event(users)
+            }
         }
     }
 
-    fun attachFile(view: View){
+    fun attachFile(view: View) {
         attachFile.value = Event(Any())
     }
 
-    fun fileAttached(data:Intent,context:Context){
-        settings.value?.files = repository.loadFilePaths(data, context)
+    fun fileAttached(data: Intent, context: Context) {
+        if (settings.value != null) {
+            val list =
+                if (settings.value!!.files.isEmpty()) repository.loadFilePaths(data, context)
+                else "${settings.value?.files},${repository.loadFilePaths(data, context)}"
+            val resultList = ArrayList<String>()
+            list.split(",").forEach {
+                if (it.length > 3) {
+                    resultList.add(it)
+                }
+            }
+            if (resultList.size > 8) {
+                toast.value = Event("Максимум 8 файлов")
+            } else {
+                log(resultList)
+                settings.value?.files = list
+                files.value = list
+            }
+        }
     }
 
-    fun copyToClipboard(users:String, context: Context){
+    fun copyToClipboard(users: String, context: Context) {
         val clipboard =
             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("users list", users))
     }
 
+    fun removeFile(position: Int) {
+        val list = repository.removeFile(position, settings.value)
+
+        settings.value?.files = list
+        files.value = list
+    }
 
     private fun calculateMaxOnlineDiff(): Long {
         return when (lastOnline.value) {
