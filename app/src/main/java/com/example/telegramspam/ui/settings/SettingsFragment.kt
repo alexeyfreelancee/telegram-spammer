@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.telegramspam.R
 import com.example.telegramspam.databinding.SettingsFragmentBinding
 import com.example.telegramspam.utils.DB_PATH
+import com.example.telegramspam.utils.toast
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
 import org.kodein.di.generic.instance
@@ -37,6 +38,12 @@ class SettingsFragment : Fragment(), KodeinAware {
         viewModel = ViewModelProvider(this, factory).get(SettingsViewModel::class.java)
         val accId = requireArguments().getString(DB_PATH) ?: ""
         viewModel.loadSettings(accId)
+        viewModel.loaded.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                toast("Скопировано в буфер обмена")
+                viewModel.copyToClipboard(it.peekContent(),requireContext())
+            }
+        })
         viewModel.settings.observe(viewLifecycleOwner, Observer {
             when (it.maxOnlineDifference) {
                 (60 * 60).toLong() -> binding.spinner.setSelection(1)

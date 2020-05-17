@@ -17,6 +17,7 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
     val showGuide = MutableLiveData<Event<Any>>()
     val dataLoading = MutableLiveData(false)
     val lastOnline = MutableLiveData("")
+    val loaded = MutableLiveData<Event<String>>()
     private var dbPath = ""
 
     fun loadSettings(dbPath: String) = viewModelScope.launch {
@@ -41,21 +42,22 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
         val settings = settings.value
         if (settings != null) {
             dataLoading.value = true
-            repository.loadAccountList(settings, this, view)
-
+            repository.loadAccountList(settings, this)
         }
-
     }
 
-    override fun loaded(users: String, view: View) {
+    override fun loaded(users: String) {
         viewModelScope.launch {
             dataLoading.value = false
-            val clipboard =
-                view.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("laber", users))
-            view.toast("Скопировано в буфер обмена")
+            loaded.value = Event(users)
         }
+    }
 
+
+    fun copyToClipboard(users:String, context: Context){
+        val clipboard =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("laber", users))
     }
 
 
@@ -68,7 +70,7 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
             DAY -> 60 * 60 * 24
             THREE_DAYS -> 60 * 60 * 24 * 3
             WEEK -> 60 * 60 * 24 * 7
-            else -> 60 * 3
+            else -> 0
         }
 
     }

@@ -1,7 +1,6 @@
 package com.example.telegramspam.data
 
 import android.os.Environment
-import android.view.View
 import androidx.lifecycle.LiveData
 import com.example.telegramspam.data.database.AppDatabase
 import com.example.telegramspam.models.Account
@@ -13,55 +12,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 import java.util.concurrent.ThreadLocalRandom
 
-class Repository(private val db: AppDatabase, private val telegram: TelegramAccountsHelper) {
-
-    fun loadAccountList(settings: Settings, listener: UsersLoadingListener, view: View) {
-        log(settings.groups)
-        val zero: Long = 0
-        val list = settings.groups.split(",")
-        val resultList = ArrayList<String>()
-        val client = telegram.getByDbPath(settings.dbPath)
-        if (client != null) {
-            list.forEach {
-                client.send(TdApi.SearchPublicChat(it)) { chat ->
-                    if (chat is TdApi.Chat) {
-                        val type = chat.type
-                        if (type is TdApi.ChatTypeSupergroup) {
-                            client.send(TdApi.GetSupergroupMembers(type.supergroupId, null, 0, 200)) { chatMembers ->
-                                if (chatMembers is TdApi.ChatMembers) {
-                                    val count = chatMembers.totalCount / 200
-                                    var offset = 0
-                                    for (i in 0..count) {
-                                        client.send(TdApi.GetSupergroupMembers(type.supergroupId, null, offset, 200)) { members ->
-                                            if (members is TdApi.ChatMembers) {
-                                                for (j in 0..members.members.size) {
-                                                    client.send(TdApi.GetUser(members.members[j].userId)) { user ->
-                                                        if (user is TdApi.User) {
-                                                            if (!user.username.isNullOrEmpty()) {
-                                                                if ((user.profilePhoto?.id != zero && settings.havePhoto) || (!settings.havePhoto && user.profilePhoto?.id == zero)) {
-                                                                    val status = user.status
-                                                                    val minOnline =
-                                                                        System.currentTimeMillis() / 1000 - settings.maxOnlineDifference
-                                                                    if (status.constructor == TdApi.UserStatusOnline.CONSTRUCTOR || (status is TdApi.UserStatusOffline && status.wasOnline >= minOnline)) {
-                                                                        log("@${user.username} added to list")
-                                                                        resultList.add("@${user.username}")
-                                                                    } else {
-                                                                        //   log("was online: ${(user.status as TdApi.UserStatusOffline).wasOnline * 1000}  minOnline: $minOnline")
-                                                                    }
-                                                                } else {
-                                                                    // log("photo setting not passed ${user.profilePhoto?.id}")
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            offset += 200
-                                        }
-                                    }
 //                                    val users = StringBuilder()
 //                                    resultList.forEach { username ->
 //                                        users.append("$username,")
@@ -71,11 +25,83 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
 //                                        users.toString().dropLast(1),
 //                                        view
 //                                    )
+
+class Repository(private val db: AppDatabase, private val telegram: TelegramAccountsHelper) {
+
+    fun loadAccountList(settings: Settings, listener: UsersLoadingListener) {
+        log(settings.groups)
+        val list = settings.groups.split(",")
+        val resultList = ArrayList<String>()
+        val client = telegram.getByDbPath(settings.dbPath)
+        if (client != null) {
+            list.forEach {
+                client.send(TdApi.SearchPublicChat(it)) { chat ->
+                    if (chat is TdApi.Chat && chat.type is TdApi.ChatTypeSupergroup) {
+                        val type = chat.type
+                        if (type is TdApi.ChatTypeSupergroup) {
+                            parseUsersFromChat(client, type, settings, resultList)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun parseUsersFromChat(
+        client: Client,
+        type: TdApi.ChatTypeSupergroup,
+        settings: Settings,
+        resultList: ArrayList<String>
+    ) {
+        client.send(TdApi.GetSupergroupMembers(type.supergroupId, null, 0, 200)) { members ->
+            var offset = 0
+            val count = (members as TdApi.ChatMembers).totalCount / 200
+
+            for (i in 0..count) {
+                client.send(
+                    TdApi.GetSupergroupMembers(
+                        type.supergroupId,
+                        null,
+                        offset,
+                        200
+                    )
+                ) { result ->
+                    log("iteration $i/$count")
+                    log("loaded with offset $offset")
+                    if (result is TdApi.ChatMembers) {
+                        result.members.forEach {
+                            client.send(TdApi.GetUser(it.userId)) { user ->
+                                if (user is TdApi.User) {
+                                    checkUserBySettings(settings, user, resultList)
                                 }
                             }
                         }
                     }
+                    offset += 200
                 }
+
+            }
+
+        }
+
+
+    }
+
+    private fun checkUserBySettings(
+        settings: Settings,
+        user: TdApi.User,
+        resultList: ArrayList<String>
+    ) {
+        val zero: Long = 0
+        if (!user.username.isNullOrEmpty()) {
+            if ((user.profilePhoto?.id != zero && settings.havePhoto) || (!settings.havePhoto && user.profilePhoto?.id == zero)) {
+                val status = user.status
+                val minOnline = System.currentTimeMillis() / 1000 - settings.maxOnlineDifference
+                if (status.constructor == TdApi.UserStatusOnline.CONSTRUCTOR || (status.constructor == TdApi.UserStatusOffline.CONSTRUCTOR && minOnline <=  (status as TdApi.UserStatusOffline).wasOnline )) {
+                    log("@${user.username} added to list")
+                    resultList.add("@${user.username}")
+                }
+
             }
         }
     }

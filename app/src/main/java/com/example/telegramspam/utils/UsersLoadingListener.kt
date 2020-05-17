@@ -4,5 +4,5 @@ import android.content.Context
 import android.view.View
 
 interface UsersLoadingListener {
-    fun loaded(users:String, view: View)
+    fun loaded(users:String)
 }
