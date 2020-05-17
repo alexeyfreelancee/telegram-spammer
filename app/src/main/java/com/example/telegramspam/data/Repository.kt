@@ -19,21 +19,65 @@ import java.util.concurrent.ThreadLocalRandom
 class Repository(private val db: AppDatabase, private val telegram: TelegramAccountsHelper) {
 
     fun loadAccountList(settings: Settings, listener: UsersLoadingListener, view: View) {
+        log(settings.groups)
+        val zero: Long = 0
         val list = settings.groups.split(",")
         val resultList = ArrayList<String>()
         val client = telegram.getByDbPath(settings.dbPath)
-        if(client!=null){
+        if (client != null) {
             list.forEach {
-               
+                client.send(TdApi.SearchPublicChat(it)) { chat ->
+                    if (chat is TdApi.Chat) {
+                        val type = chat.type
+                        if (type is TdApi.ChatTypeSupergroup) {
+                            client.send(TdApi.GetSupergroupMembers(type.supergroupId, null, 0, 200)) { chatMembers ->
+                                if (chatMembers is TdApi.ChatMembers) {
+                                    val count = chatMembers.totalCount / 200
+                                    var offset = 0
+                                    for (i in 0..count) {
+                                        client.send(TdApi.GetSupergroupMembers(type.supergroupId, null, offset, 200)) { members ->
+                                            if (members is TdApi.ChatMembers) {
+                                                for (j in 0..members.members.size) {
+                                                    client.send(TdApi.GetUser(members.members[j].userId)) { user ->
+                                                        if (user is TdApi.User) {
+                                                            if (!user.username.isNullOrEmpty()) {
+                                                                if ((user.profilePhoto?.id != zero && settings.havePhoto) || (!settings.havePhoto && user.profilePhoto?.id == zero)) {
+                                                                    val status = user.status
+                                                                    val minOnline =
+                                                                        System.currentTimeMillis() / 1000 - settings.maxOnlineDifference
+                                                                    if (status.constructor == TdApi.UserStatusOnline.CONSTRUCTOR || (status is TdApi.UserStatusOffline && status.wasOnline >= minOnline)) {
+                                                                        log("@${user.username} added to list")
+                                                                        resultList.add("@${user.username}")
+                                                                    } else {
+                                                                        //   log("was online: ${(user.status as TdApi.UserStatusOffline).wasOnline * 1000}  minOnline: $minOnline")
+                                                                    }
+                                                                } else {
+                                                                    // log("photo setting not passed ${user.profilePhoto?.id}")
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            offset += 200
+                                        }
+                                    }
+//                                    val users = StringBuilder()
+//                                    resultList.forEach { username ->
+//                                        users.append("$username,")
+//                                    }
+//
+//                                    listener.loaded(
+//                                        users.toString().dropLast(1),
+//                                        view
+//                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
-
-        val users = StringBuilder()
-        resultList.forEach {
-            users.append("$it,")
-        }
-
-        listener.loaded(users.toString().dropLast(1), view)
     }
 
 
@@ -45,6 +89,7 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
 
     suspend fun saveSettings(settings: Settings) {
         CoroutineScope(Dispatchers.IO).launch {
+            log("settings saved $settings")
             db.settingsDao().insert(settings)
         }
     }

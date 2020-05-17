@@ -26,13 +26,28 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/groups">
+                android:hint="@string/chats">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:layout_width="match_parent"
-
+                    android:maxHeight="200dp"
                     android:layout_height="wrap_content"
                     android:text="@={viewmodel.settings.groups}" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_marginTop="8dp"
+                android:layout_height="wrap_content"
+                android:hint="@string/message">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:maxHeight="200dp"
+                    android:layout_height="wrap_content"
+                    android:text="@={viewmodel.settings.message}" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -52,11 +67,28 @@
                 android:text="@string/hidden_status"
                 android:textSize="18sp" />
 
-            <Spinner
-                app:selectedValue="@={viewmodel.lastOnline}"
+            <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:checked="@={viewmodel.settings.block}"
+                android:text="@string/block"
+                android:textSize="18sp" />
+
+
+            <TextView
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="16dp"
+                android:text="Максимальный онлайн"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <Spinner
+
+                android:id="@+id/spinner"
+                app:selectedValue="@={viewmodel.lastOnline}"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:entries="@array/last_online" />
         </LinearLayout>
 
@@ -68,10 +100,22 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
         <Button
             android:layout_width="0dp"
-            android:onClick="@{viewmodel::loadList}"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:onClick="@{viewmodel::showGuide}"
+            android:text="@string/guide"
+            app:layout_constraintBottom_toTopOf="@+id/button5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/button5"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:onClick="@{viewmodel::loadList}"
             android:text="@string/get_list_now"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

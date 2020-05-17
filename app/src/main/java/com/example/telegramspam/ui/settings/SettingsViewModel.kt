@@ -14,11 +14,13 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
     private val _settings = MutableLiveData<Settings>()
     val settings: LiveData<Settings> get() = _settings
 
+    val showGuide = MutableLiveData<Event<Any>>()
     val dataLoading = MutableLiveData(false)
     val lastOnline = MutableLiveData("")
     private var dbPath = ""
 
     fun loadSettings(dbPath: String) = viewModelScope.launch {
+
         this@SettingsViewModel.dbPath = dbPath
         val settings = repository.loadSettings(dbPath) ?: Settings()
         settings.dbPath = dbPath
@@ -27,10 +29,12 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
 
     fun saveSettings() = viewModelScope.launch {
         settings.value?.let {
-            it.maxOnlineDifference = calculateMaxOnlineDiff()
-            log("settings saved", it)
-            repository.saveSettings(it)
+            repository.saveSettings(it.apply { maxOnlineDifference = calculateMaxOnlineDiff() })
         }
+    }
+
+    fun showGuide(view: View) {
+        showGuide.value = Event(Any())
     }
 
     fun loadList(view: View) {
@@ -38,16 +42,22 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
         if (settings != null) {
             dataLoading.value = true
             repository.loadAccountList(settings, this, view)
+
         }
 
     }
 
     override fun loaded(users: String, view: View) {
-        dataLoading.value = false
-        val clipboard = view.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("laber", users))
-        view.toast("Скопировано в буфер обмена")
+        viewModelScope.launch {
+            dataLoading.value = false
+            val clipboard =
+                view.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("laber", users))
+            view.toast("Скопировано в буфер обмена")
+        }
+
     }
+
 
     private fun calculateMaxOnlineDiff(): Long {
         return when (lastOnline.value) {

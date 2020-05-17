@@ -5,10 +5,12 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "settings_table")
 data class Settings(
-    var maxOnlineDifference: Long = 0,
     @PrimaryKey
     var dbPath: String = "",
+    var maxOnlineDifference: Long = 0,
     var havePhoto: Boolean = false,
     var hiddenStatus: Boolean = false,
-    var groups:String = ""
+    var groups:String = "",
+    var message:String = "",
+    var block:Boolean = false
 )

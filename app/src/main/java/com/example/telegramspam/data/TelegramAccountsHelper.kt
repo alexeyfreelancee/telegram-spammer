@@ -13,6 +13,7 @@ class TelegramAccountsHelper(private val db: AppDatabase) {
 
     fun init() {
         CoroutineScope(Dispatchers.IO).launch {
+            Client.execute(TdApi.SetLogVerbosityLevel(0))
             val accounts = db.accountsDao().loadAll()
             accounts.forEach { account ->
 
@@ -21,6 +22,7 @@ class TelegramAccountsHelper(private val db: AppDatabase) {
                 val params = generateParams(account.databasePath)
                 client.send(TdApi.SetTdlibParameters(params), null)
                 client.send(TdApi.CheckDatabaseEncryptionKey(), null)
+
                 if (account.proxyIp.isNotEmpty() && account.proxyPort != 0) {
                     addProxy(
                         account.databasePath,
@@ -31,14 +33,17 @@ class TelegramAccountsHelper(private val db: AppDatabase) {
                         account.proxyType
                     )
                 }
+
+
                 clients[account.databasePath] = client
             }
         }
     }
 
-    fun getByDbPath(dbPath: String): Client?{
+    fun getByDbPath(dbPath: String): Client? {
         return clients[dbPath]
     }
+
     fun addProxy(
         databasePath: String,
         proxyIp: String,

@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.Settings
 
-@Database(entities = [Account::class, Settings::class], version = 7)
+@Database(entities = [Account::class, Settings::class], version = 8)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun accountsDao(): AccountsDao
     abstract fun settingsDao(): SettingsDao

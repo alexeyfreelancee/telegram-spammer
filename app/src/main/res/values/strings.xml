@@ -12,10 +12,15 @@
     <string name="proxy_type">Тип прокси</string>
     <string name="settings">Настройки</string>
     <string name="start_spam">Начать спам</string>
-    <string name="groups">Группы</string>
+    <string name="chats">Чаты</string>
+
     <string name="hidden_status">Скрытый статус</string>
     <string name="have_photo">Есть фото</string>
     <string name="get_list_now">Получить список сейчас</string>
+    <string name="message">Сообщение</string>
+    <string name="guide">Инструкция</string>
+    <string name="block">Блокировать после отправки</string>
+    <string name="chat_guide">Вводить через зяпятую, без пробелов \nПример: @chat_name,@chat_name</string>
     <array name="last_online">
         <item>Сейчас онлайн</item>
         <item>Пол часа назад</item>

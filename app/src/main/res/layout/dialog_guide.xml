@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+
+  <LinearLayout
+      android:orientation="vertical"
+      android:layout_width="match_parent"
+      android:padding="16dp"
+      android:layout_height="wrap_content">
+
+      <TextView
+          android:textSize="18sp"
+          android:text="@string/chats"
+          android:textStyle="bold"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"/>
+
+      <TextView
+          android:text="@string/chat_guide"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"/>
+
+      <TextView
+          android:layout_marginTop="16dp"
+          android:textSize="18sp"
+          android:text="@string/message"
+          android:textStyle="bold"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"/>
+
+      <TextView
+          android:text="Добавить имя получателя: @name \n\nРандомизация текста: \n{Здравствуйте|Привет} @name@ \n\nКак итог, при спаме будет использовано два шаблона сообщений \n&quot;Здравствуйте @name&quot; и &quot;Привет @name&quot;"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"/>
+
+
+
+
+  </LinearLayout>
+
+
+
+</androidx.cardview.widget.CardView>
