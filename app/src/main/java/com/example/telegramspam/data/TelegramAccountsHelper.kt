@@ -40,6 +40,26 @@ class TelegramAccountsHelper(private val db: AppDatabase) {
         }
     }
 
+
+    suspend fun sendMessage(client: Client) {
+        val path1 = "/storage/emulated/0/VK/Downloads/OeQ9POJ_Vlk.jpg"
+        val path2 = "/storage/emulated/0/VK/Photos/1589675415479.jpg"
+
+        val photo = TdApi.InputFileLocal(path1)
+        val photo1 = TdApi.InputFileLocal(path2)
+
+        val text = TdApi.FormattedText("plivite sosiski", null)
+        val text1 = TdApi.FormattedText("sosiski pliviski", null)
+
+        val content = TdApi.InputMessagePhoto(photo, null, null, 300, 300, null, 0)
+        val content1 = TdApi.InputMessagePhoto(photo1, null,null, 300,300,text1,0)
+
+        client.send(TdApi.SendMessageAlbum(698697860, 0, null,  arrayOf(content, content1))){
+
+        }
+
+    }
+
     fun getByDbPath(dbPath: String): Client? {
         return clients[dbPath]
     }

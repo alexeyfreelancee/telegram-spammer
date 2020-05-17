@@ -48,19 +48,22 @@ class AccountsFragment : Fragment(), KodeinAware {
 
     private fun setupDeleteDialog() {
         viewModel.openDeleteDialog.observe(viewLifecycleOwner, Observer {
-            val id = it.peekContent()
-            AlertDialog.Builder(requireContext())
-                .setTitle("Удалить аккаунт")
-                .setMessage("Вы уверены что хотите удалить аккаунт?")
-                .setNegativeButton(
-                    "Нет"
-                ) { dialog, _ -> dialog.dismiss() }
-                .setPositiveButton(
-                    "Да"
-                ) { dialog, _ ->
-                    viewModel.deleteAccount(id)
-                    dialog.dismiss()
-                }.show()
+            if(!it.hasBeenHandled){
+                val id = it.peekContent()
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Удалить аккаунт")
+                    .setMessage("Вы уверены что хотите удалить аккаунт?")
+                    .setNegativeButton(
+                        "Нет"
+                    ) { dialog, _ -> dialog.dismiss() }
+                    .setPositiveButton(
+                        "Да"
+                    ) { dialog, _ ->
+                        viewModel.deleteAccount(id)
+                        dialog.dismiss()
+                    }.show()
+            }
+
         })
 
     }

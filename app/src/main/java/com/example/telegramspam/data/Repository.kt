@@ -174,17 +174,7 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
     }
 
 
-    suspend fun sendMessage(client: Client, path:String, text:String){
-        val photo = TdApi.InputFileLocal(path)
-        val thumb = TdApi.InputThumbnail(photo,50,50)
-        val caption = TdApi.FormattedText(text, null)
-        val messageContent = TdApi.InputMessagePhoto(photo,thumb,null,300,300,caption, 60)
 
-        val options = TdApi.SendMessageOptions(false,true,null)
-        client.send(TdApi.SendMessage(1234,0,options,null,messageContent)){
-
-        }
-    }
     suspend fun loadSettings(dbPath: String): Settings? {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             db.settingsDao().loadByPath(dbPath)
