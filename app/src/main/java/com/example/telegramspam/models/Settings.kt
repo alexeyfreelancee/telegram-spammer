@@ -10,7 +10,9 @@ data class Settings(
     var maxOnlineDifference: Long = 0,
     var havePhoto: Boolean = false,
     var hiddenStatus: Boolean = false,
-    var groups:String = "",
+    var chats:String = "",
     var message:String = "",
-    var block:Boolean = false
+    var block:Boolean = false,
+    var delay:String= "",
+    var files:String = ""
 )

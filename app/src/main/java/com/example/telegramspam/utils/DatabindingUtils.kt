@@ -1,15 +1,15 @@
 package com.example.telegramspam.utils
 
 import android.view.View
-import android.widget.AdapterView
+import android.widget.*
 import android.widget.AdapterView.OnItemSelectedListener
-import android.widget.ArrayAdapter
-import android.widget.Spinner
-import android.widget.TextView
 import androidx.databinding.BindingAdapter
 import androidx.databinding.InverseBindingAdapter
 import androidx.databinding.InverseBindingListener
+import com.bumptech.glide.Glide
+import com.example.telegramspam.R
 import com.example.telegramspam.models.Account
+import java.io.File
 
 
 @BindingAdapter("phoneNumber")
@@ -19,7 +19,86 @@ fun setPhoneNumber(textView: TextView, phoneNumber:String?){
     }
 }
 
+@BindingAdapter("file")
+fun setFile(view: ImageView, stringFiles:String?){
+    if(stringFiles!=null){
+        val files = stringFiles.split(",")
+        when(view.id){
+            R.id.first ->{
+                if(files.size > 0 && files[0].isNotEmpty()){
+                    view.loadFile(files[0])
+                }else{
+                    view.gone()
+                }
+            }
+            R.id.second ->{
+                if(files.size > 1){
+                    view.loadFile(files[1])
+                } else{
+                    view.gone()
+                }
+            }
+            R.id.third ->{
+                if(files.size > 2){
+                    view.loadFile(files[2])
+                } else{
+                    view.gone()
+                }
+            }
+            R.id.fourth ->{
+                if(files.size > 3){
+                    view.loadFile(files[3])
+                } else{
+                    view.gone()
+                }
+            }
+            R.id.fifth ->{
+                if(files.size > 4){
+                    view.loadFile(files[4])
+                } else{
+                    view.gone()
+                }
+            }
+            R.id.sixth ->{
+                if(files.size > 5){
+                    view.loadFile(files[5])
+                } else{
+                    view.gone()
+                }
+            }
+            R.id.seventh ->{
+                if(files.size > 6){
+                    view.loadFile(files[6])
+                } else{
+                    view.gone()
+                }
+            }
+            R.id.eighth ->{
+                if(files.size > 7){
+                    view.loadFile(files[7])
+                } else{
+                    view.gone()
+                }
+            }
+        }
+    }else{
+        view.gone()
+    }
+}
+fun ImageView.loadFile(path:String){
+    this.visible()
+    Glide.with(this.context)
+        .load(File(path))
+        .into(this)
+}
 
+fun View.gone(){
+    this.visibility = View.GONE
+}
+
+fun View.visible(){
+    this.visibility = View.VISIBLE
+}
 @BindingAdapter(value = ["selectedValue", "selectedValueAttrChanged"], requireAll = false)
 fun bindSpinnerData(
     spinner: Spinner,

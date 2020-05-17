@@ -2,124 +2,239 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
+
     <data>
-        <import type="android.view.View"/>
+
+        <import type="android.view.View" />
+
         <variable
             name="viewmodel"
             type="com.example.telegramspam.ui.settings.SettingsViewModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="16dp"
-        tools:context=".ui.settings.SettingsFragment">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/chats">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:layout_width="match_parent"
-                    android:maxHeight="200dp"
-                    android:layout_height="wrap_content"
-                    android:text="@={viewmodel.settings.groups}" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_marginTop="8dp"
-                android:layout_height="wrap_content"
-                android:hint="@string/message">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:layout_width="match_parent"
-                    android:maxHeight="200dp"
-                    android:layout_height="wrap_content"
-                    android:text="@={viewmodel.settings.message}" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:checked="@={viewmodel.settings.havePhoto}"
-                android:text="@string/have_photo"
-                android:textSize="18sp" />
-
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:checked="@={viewmodel.settings.hiddenStatus}"
-                android:text="@string/hidden_status"
-                android:textSize="18sp" />
-
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:checked="@={viewmodel.settings.block}"
-                android:text="@string/block"
-                android:textSize="18sp" />
-
-
-            <TextView
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="16dp"
-                android:text="Максимальный онлайн"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <Spinner
-
-                android:id="@+id/spinner"
-                app:selectedValue="@={viewmodel.lastOnline}"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:entries="@array/last_online" />
-        </LinearLayout>
+        android:layout_height="match_parent">
 
         <ProgressBar
             android:layout_width="45dp"
             android:layout_height="45dp"
-            android:visibility="@{viewmodel.dataLoading ? View.VISIBLE : View.GONE}"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_centerInParent="true"
+            android:visibility="@{viewmodel.dataLoading ? View.VISIBLE : View.GONE}" />
 
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:onClick="@{viewmodel::showGuide}"
-            android:text="@string/guide"
-            app:layout_constraintBottom_toTopOf="@+id/button5"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-        <Button
-            android:id="@+id/button5"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:onClick="@{viewmodel::loadList}"
-            android:text="@string/get_list_now"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                tools:context=".ui.settings.SettingsFragment">
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+                <LinearLayout
+                    android:id="@+id/linear"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/chats">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:maxHeight="200dp"
+                            android:text="@={viewmodel.settings.chats}" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:hint="@string/message">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:maxHeight="200dp"
+                            android:text="@={viewmodel.settings.message}" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/delay">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:maxHeight="200dp"
+                            android:text="@={viewmodel.settings.delay}" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <CheckBox
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:checked="@={viewmodel.settings.havePhoto}"
+                        android:text="@string/have_photo"
+                        android:textSize="18sp" />
+
+                    <CheckBox
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:checked="@={viewmodel.settings.hiddenStatus}"
+                        android:text="@string/hidden_status"
+                        android:textSize="18sp" />
+
+                    <CheckBox
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:checked="@={viewmodel.settings.block}"
+                        android:text="@string/block"
+                        android:textSize="18sp" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="16dp"
+                        android:text="Максимальный онлайн" />
+
+                    <Spinner
+
+                        android:id="@+id/spinner"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:entries="@array/last_online"
+                        app:selectedValue="@={viewmodel.lastOnline}" />
+
+
+                    <RelativeLayout
+                        android:padding="8dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <ImageView
+                            android:layout_marginBottom="8dp"
+                            android:layout_marginEnd="8dp"
+                            android:id="@+id/first"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            app:file="@{viewmodel.settings.files}" />
+
+                        <ImageView
+                            android:layout_marginEnd="8dp"
+                            android:id="@+id/second"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_toEndOf="@id/first"
+                            app:file="@{viewmodel.settings.files}" />
+
+                        <ImageView
+                            android:layout_marginEnd="8dp"
+                            android:id="@+id/third"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_toEndOf="@id/second"
+                            app:file="@{viewmodel.settings.files}" />
+
+                        <ImageView
+                            android:id="@+id/fourth"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_toEndOf="@id/third"
+                            app:file="@{viewmodel.settings.files}" />
+
+                        <ImageView
+                            android:id="@+id/fifth"
+
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_below="@id/first"
+                            app:file="@{viewmodel.settings.files}" />
+
+                        <ImageView
+                            android:id="@+id/sixth"
+                            android:layout_width="50dp"
+                            android:layout_marginEnd="8dp"
+                            android:layout_height="50dp"
+                            android:layout_below="@id/first"
+                            android:layout_toEndOf="@id/first"
+                            app:file="@{viewmodel.settings.files}" />
+
+                        <ImageView
+                            android:id="@+id/seventh"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_below="@id/first"
+                            android:layout_toEndOf="@id/sixth"
+                            app:file="@{viewmodel.settings.files}" />
+
+                        <ImageView
+                            android:layout_toEndOf="@id/third"
+                            android:id="@+id/eighth"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_below="@id/first"
+                            app:file="@{viewmodel.settings.files}" />
+
+                    </RelativeLayout>
+                </LinearLayout>
+
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="4dp"
+                    android:onClick="@{viewmodel::attachFile}"
+                    android:text="@string/add_file"
+                    app:layout_constraintBottom_toTopOf="@+id/button7"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.968"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/linear" />
+
+                <Button
+                    android:id="@+id/button7"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:onClick="@{viewmodel::showGuide}"
+                    android:text="@string/guide"
+                    app:layout_constraintBottom_toTopOf="@+id/button5"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <Button
+                    android:id="@+id/button5"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:onClick="@{viewmodel::loadList}"
+                    android:text="@string/get_list_now"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.core.widget.NestedScrollView>
+    </RelativeLayout>
+
+
 </layout>

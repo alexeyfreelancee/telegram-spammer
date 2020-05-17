@@ -1,12 +1,17 @@
 package com.example.telegramspam.data
 
+import android.content.Context
+import android.content.Intent
 import android.os.Environment
+import android.widget.Toast
+import androidx.core.net.toFile
 import androidx.lifecycle.LiveData
 import com.example.telegramspam.data.database.AppDatabase
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.Settings
 import com.example.telegramspam.utils.AuthorizationListener
 import com.example.telegramspam.utils.UsersLoadingListener
+import com.example.telegramspam.utils.getPath
 import com.example.telegramspam.utils.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,22 +21,43 @@ import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 import java.util.concurrent.ThreadLocalRandom
 
-//                                    val users = StringBuilder()
-//                                    resultList.forEach { username ->
-//                                        users.append("$username,")
-//                                    }
-//
-//                                    listener.loaded(
-//                                        users.toString().dropLast(1),
-//                                        view
-//                                    )
 
 class Repository(private val db: AppDatabase, private val telegram: TelegramAccountsHelper) {
+    fun checkSettings(settings: Settings?, beforeSpam:Boolean) : Boolean{
+        if(settings !=null){
+            return if(beforeSpam){
+                val chats = settings.chats.split(",")
+                val chatsOk = chats.isNotEmpty() && chats[0].startsWith("@") && chats[0].length > 1
+                settings.delay.isNotEmpty() && settings.message.isNotEmpty() && chatsOk
+            }else{
+                val chats = settings.chats.split(",")
+                return chats.isNotEmpty() && chats[0].startsWith("@") && chats[0].length > 1
+            }
+        }
+
+        return false
+    }
+    fun loadFilePaths(data: Intent, context: Context) : String{
+        val pathList = ArrayList<String>()
+        if (data.clipData != null && data.clipData!!.itemCount <= 5) {
+            for (i in 0 until data.clipData!!.itemCount) {
+                pathList.add(data.clipData!!.getItemAt(i).uri.getPath(context))
+            }
+        } else if (data.data != null) {
+            pathList.add(data.data!!.getPath(context))
+        }
+        val result = StringBuilder()
+        pathList.forEach {
+            if(it.isNotEmpty()) result.append("$it,")
+        }
+        log(result.toString().dropLast(1))
+        return result.toString().dropLast(1)
+    }
+
 
     fun loadAccountList(settings: Settings, listener: UsersLoadingListener) {
-        log(settings.groups)
-        val list = settings.groups.split(",")
-        val resultList = ArrayList<String>()
+        log(settings.chats)
+        val list = settings.chats.split(",")
         val client = telegram.getByDbPath(settings.dbPath)
         if (client != null) {
             list.forEach {
@@ -39,7 +65,7 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
                     if (chat is TdApi.Chat && chat.type is TdApi.ChatTypeSupergroup) {
                         val type = chat.type
                         if (type is TdApi.ChatTypeSupergroup) {
-                            parseUsersFromChat(client, type, settings, resultList)
+                            parseUsersFromChat(client, type, settings, listener)
                         }
                     }
                 }
@@ -50,14 +76,14 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
     private fun parseUsersFromChat(
         client: Client,
         type: TdApi.ChatTypeSupergroup,
-        settings: Settings,
-        resultList: ArrayList<String>
+        settings: Settings,listener: UsersLoadingListener
     ) {
         client.send(TdApi.GetSupergroupMembers(type.supergroupId, null, 0, 200)) { members ->
             var offset = 0
-            val count = (members as TdApi.ChatMembers).totalCount / 200
-
-            for (i in 0..count) {
+            var counter1 = 0
+            val count1 = (members as TdApi.ChatMembers).totalCount / 200
+            val resultList = HashSet<String>()
+            for (i in 0..count1) {
                 client.send(
                     TdApi.GetSupergroupMembers(
                         type.supergroupId,
@@ -66,22 +92,27 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
                         200
                     )
                 ) { result ->
-                    log("iteration $i/$count")
-                    log("loaded with offset $offset")
                     if (result is TdApi.ChatMembers) {
+                        var counter2 = 0
+                        val count2 = result.members.size
+
                         result.members.forEach {
                             client.send(TdApi.GetUser(it.userId)) { user ->
                                 if (user is TdApi.User) {
-                                    checkUserBySettings(settings, user, resultList)
+                                    counter2+=1
+                                    log("counter1 $counter1 and count1 $count1")
+                                    log("counter2 $counter2 and count2 $count2")
+                                    val lastRun = counter1 >= count1 && counter2 >= count2
+                                    checkUserBySettings(settings, user, resultList, lastRun,listener)
                                 }
+
                             }
                         }
                     }
-                    offset += 200
+                    counter1+=1
                 }
-
+                offset += 200
             }
-
         }
 
 
@@ -90,7 +121,9 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
     private fun checkUserBySettings(
         settings: Settings,
         user: TdApi.User,
-        resultList: ArrayList<String>
+        resultList:HashSet<String>,
+        lastRun:Boolean,
+        listener: UsersLoadingListener
     ) {
         val zero: Long = 0
         if (!user.username.isNullOrEmpty()) {
@@ -98,15 +131,32 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
                 val status = user.status
                 val minOnline = System.currentTimeMillis() / 1000 - settings.maxOnlineDifference
                 if (status.constructor == TdApi.UserStatusOnline.CONSTRUCTOR || (status.constructor == TdApi.UserStatusOffline.CONSTRUCTOR && minOnline <=  (status as TdApi.UserStatusOffline).wasOnline )) {
-                    log("@${user.username} added to list")
                     resultList.add("@${user.username}")
                 }
 
             }
         }
+        if(lastRun){
+            val users = StringBuilder()
+            resultList.forEach { username ->
+                users.append("$username,")
+            }
+            listener.loaded(users.toString().dropLast(1))
+        }
     }
 
 
+    suspend fun sendMessage(client: Client, path:String, text:String){
+        val photo = TdApi.InputFileLocal(path)
+        val thumb = TdApi.InputThumbnail(photo,50,50)
+        val caption = TdApi.FormattedText(text, null)
+        val messageContent = TdApi.InputMessagePhoto(photo,thumb,null,300,300,caption, 60)
+
+        val options = TdApi.SendMessageOptions(false,true,null)
+        client.send(TdApi.SendMessage(1234,0,options,null,messageContent)){
+
+        }
+    }
     suspend fun loadSettings(dbPath: String): Settings? {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             db.settingsDao().loadByPath(dbPath)

@@ -1,7 +1,10 @@
 package com.example.telegramspam.ui.settings
 
+import android.app.Activity.RESULT_OK
 import android.app.Dialog
+import android.content.Intent
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +18,7 @@ import com.example.telegramspam.utils.toast
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
 import org.kodein.di.generic.instance
+
 
 class SettingsFragment : Fragment(), KodeinAware {
     override val kodein by kodein()
@@ -38,10 +42,27 @@ class SettingsFragment : Fragment(), KodeinAware {
         viewModel = ViewModelProvider(this, factory).get(SettingsViewModel::class.java)
         val accId = requireArguments().getString(DB_PATH) ?: ""
         viewModel.loadSettings(accId)
-        viewModel.loaded.observe(viewLifecycleOwner, Observer {
-            if(!it.hasBeenHandled){
+        viewModel.usersLoaded.observe(viewLifecycleOwner, Observer {
+            if (!it.hasBeenHandled) {
                 toast("Скопировано в буфер обмена")
-                viewModel.copyToClipboard(it.peekContent(),requireContext())
+                viewModel.copyToClipboard(it.peekContent(), requireContext())
+            }
+        })
+        viewModel.attachFile.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                it.peekContent()
+
+                val intent = Intent().apply {
+                    action = Intent.ACTION_GET_CONTENT
+                    type = "image/* video/*"
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                }
+                startActivityForResult(Intent.createChooser(intent, "Прикрепить файлы"), 1)
+            }
+        })
+        viewModel.toast.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                toast(it.peekContent())
             }
         })
         viewModel.settings.observe(viewLifecycleOwner, Observer {
@@ -56,6 +77,13 @@ class SettingsFragment : Fragment(), KodeinAware {
                 else -> binding.spinner.setSelection(0)
             }
         })
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == 1 && resultCode == RESULT_OK && data!=null) {
+            viewModel.fileAttached(data, requireContext())
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     private fun setupGuideDialog() {

@@ -3,6 +3,8 @@ package com.example.telegramspam.ui.settings
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.os.Handler
 import android.view.View
 import androidx.lifecycle.*
 import com.example.telegramspam.data.Repository
@@ -14,12 +16,14 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
     private val _settings = MutableLiveData<Settings>()
     val settings: LiveData<Settings> get() = _settings
 
+    val attachFile = MutableLiveData<Event<Any>>()
     val showGuide = MutableLiveData<Event<Any>>()
     val dataLoading = MutableLiveData(false)
     val lastOnline = MutableLiveData("")
-    val loaded = MutableLiveData<Event<String>>()
+    val toast = MutableLiveData<Event<String>>()
+    val usersLoaded = MutableLiveData<Event<String>>()
     private var dbPath = ""
-
+    private var loaded = false
     fun loadSettings(dbPath: String) = viewModelScope.launch {
 
         this@SettingsViewModel.dbPath = dbPath
@@ -39,25 +43,41 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
     }
 
     fun loadList(view: View) {
-        val settings = settings.value
-        if (settings != null) {
+        if (repository.checkSettings(settings.value,false)) {
             dataLoading.value = true
-            repository.loadAccountList(settings, this)
+            loaded = false
+            Handler().postDelayed({
+                if(!loaded){
+                    dataLoading.value = false
+                    toast.value = Event("Ошибка :(")
+                }
+            }, 20000)
+            repository.loadAccountList(settings.value!!, this)
+        } else{
+            toast.value = Event("Введите чаты")
         }
     }
 
     override fun loaded(users: String) {
         viewModelScope.launch {
+            loaded = true
             dataLoading.value = false
-            loaded.value = Event(users)
+            usersLoaded.value = Event(users)
         }
     }
 
+    fun attachFile(view: View){
+        attachFile.value = Event(Any())
+    }
+
+    fun fileAttached(data:Intent,context:Context){
+        settings.value?.files = repository.loadFilePaths(data, context)
+    }
 
     fun copyToClipboard(users:String, context: Context){
         val clipboard =
             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("laber", users))
+        clipboard.setPrimaryClip(ClipData.newPlainText("users list", users))
     }
 
 
