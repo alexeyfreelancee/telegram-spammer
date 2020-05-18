@@ -10,8 +10,8 @@ import android.widget.Spinner
 import android.widget.TextView
 import com.example.telegramspam.R
 import com.example.telegramspam.ui.current_account.CurrentAccountViewModel
-import com.example.telegramspam.utils.HTTP
-import com.example.telegramspam.utils.SOCKS5
+import com.example.telegramspam.HTTP
+import com.example.telegramspam.SOCKS5
 
 class ProxyDialog(
     context: Context,
@@ -27,7 +27,10 @@ class ProxyDialog(
     private lateinit var ok: TextView
     private lateinit var cancel: TextView
 
-    private val proxyTypes = arrayOf(SOCKS5, HTTP)
+    private val proxyTypes = arrayOf(
+        SOCKS5,
+        HTTP
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -4,8 +4,8 @@ import android.app.Application
 import androidx.room.Room
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.data.database.AppDatabase
-import com.example.telegramspam.data.telegram.TelegramAccountsHelper
-import com.example.telegramspam.data.telegram.TelegramUtil
+import com.example.telegramspam.data.telegram.TelegramAuthUtil
+import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.ui.accounts.AccountsViewModelFactory
 import com.example.telegramspam.ui.add_account.AddAccountViewModelFactory
 import com.example.telegramspam.ui.current_account.CurrentAccountViewModelFactory
@@ -24,12 +24,8 @@ class App : Application(), KodeinAware {
                 .fallbackToDestructiveMigration()
                 .build()
         }
-        bind() from eagerSingleton {
-            TelegramAccountsHelper(
-                instance()
-            )
-        }
-        bind() from eagerSingleton { TelegramUtil() }
+        bind() from eagerSingleton { TelegramClientUtil() }
+        bind() from eagerSingleton { TelegramAuthUtil(instance()) }
         bind() from eagerSingleton { Repository(instance(), instance(), instance()) }
 
         bind() from singleton { AccountsViewModelFactory(instance()) }

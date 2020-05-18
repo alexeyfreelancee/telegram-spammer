@@ -9,14 +9,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
 import com.example.telegramspam.R
 import com.example.telegramspam.databinding.AddAccountFragmentBinding
-import com.example.telegramspam.utils.AuthorizationListener
+import com.example.telegramspam.data.telegram.AuthorizationListener
 import com.example.telegramspam.utils.toast
 import org.drinkless.td.libcore.telegram.TdApi
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
 import org.kodein.di.generic.instance
 
-class AddAccountFragment : Fragment(), KodeinAware, AuthorizationListener {
+class AddAccountFragment : Fragment(), KodeinAware,
+    AuthorizationListener {
     override val kodein by kodein()
     private val factory by instance<AddAccountViewModelFactory>()
     private lateinit var binding: AddAccountFragmentBinding

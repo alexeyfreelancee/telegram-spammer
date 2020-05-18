@@ -5,8 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.telegramspam.data.Repository
-import com.example.telegramspam.utils.Event
-import com.example.telegramspam.utils.log
+import com.example.telegramspam.models.Event
 import kotlinx.coroutines.launch
 
 class AccountsViewModel(private val repository: Repository) : ViewModel() {

@@ -13,7 +13,7 @@ import com.example.telegramspam.R
 import com.example.telegramspam.adapters.AccountsListAdapter
 import com.example.telegramspam.databinding.AccountsFragmentBinding
 
-import com.example.telegramspam.utils.ACC_ID
+import com.example.telegramspam.ACC_ID
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
 import org.kodein.di.generic.instance

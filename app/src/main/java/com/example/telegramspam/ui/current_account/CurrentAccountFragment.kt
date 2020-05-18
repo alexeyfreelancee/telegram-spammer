@@ -13,8 +13,8 @@ import com.example.telegramspam.R
 import com.example.telegramspam.databinding.CurrentAccountFragmentBinding
 import com.example.telegramspam.ui.dialogs.ProxyDialog
 
-import com.example.telegramspam.utils.ACC_ID
-import com.example.telegramspam.utils.DB_PATH
+import com.example.telegramspam.ACC_ID
+import com.example.telegramspam.DB_PATH
 import com.example.telegramspam.utils.log
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein

@@ -6,23 +6,22 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.example.telegramspam.R
-import com.example.telegramspam.data.telegram.TelegramAccountsHelper
+import com.example.telegramspam.data.telegram.TelegramAuthUtil
 import com.example.telegramspam.utils.checkStoragePermission
+import com.example.telegramspam.utils.createNotificationChannels
+import org.drinkless.td.libcore.telegram.Client
+import org.drinkless.td.libcore.telegram.TdApi
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.kodein
 import org.kodein.di.generic.instance
 
-class MainActivity : AppCompatActivity(), KodeinAware {
-    override val kodein by kodein()
-    private val telegram by instance<TelegramAccountsHelper>()
-
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        if (checkStoragePermission()) {
-            telegram.init()
-        }
-
+        Client.execute(TdApi.SetLogVerbosityLevel(1))
+        checkStoragePermission()
+        createNotificationChannels(applicationContext)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -41,14 +40,5 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         }
         return true
     }
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        telegram.init()
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
 
 }

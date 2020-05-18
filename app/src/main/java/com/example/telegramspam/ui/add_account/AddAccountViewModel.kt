@@ -1,13 +1,15 @@
 package com.example.telegramspam.ui.add_account
 
-import android.view.View
-import android.widget.AdapterView
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.telegramspam.ALREADY_EXISTS
+import com.example.telegramspam.ENTER_CODE
+import com.example.telegramspam.ENTER_PHONE
+import com.example.telegramspam.WRONG_PHONE
 import com.example.telegramspam.data.Repository
-import com.example.telegramspam.utils.*
+import com.example.telegramspam.data.telegram.AuthorizationListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -49,7 +51,6 @@ class AddAccountViewModel(
     fun sendCode() = viewModelScope.launch {
         if (checkFields(false)) {
             repository.enterPhoneNumber(
-                databasePath,
                 phone.value!!,
                 listener
             )

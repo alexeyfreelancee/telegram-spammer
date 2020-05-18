@@ -4,16 +4,22 @@ import android.app.Activity.RESULT_OK
 import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.example.telegramspam.ACCOUNT
+import com.example.telegramspam.DB_PATH
 import com.example.telegramspam.R
+import com.example.telegramspam.SETTINGS
 import com.example.telegramspam.databinding.SettingsFragmentBinding
+import com.example.telegramspam.models.Account
+import com.example.telegramspam.models.Settings
+import com.example.telegramspam.services.ParserService
 import com.example.telegramspam.utils.*
+import com.google.gson.Gson
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
 import org.kodein.di.generic.instance
@@ -41,10 +47,9 @@ class SettingsFragment : Fragment(), KodeinAware {
         viewModel = ViewModelProvider(this, factory).get(SettingsViewModel::class.java)
         val accId = requireArguments().getString(DB_PATH) ?: ""
         viewModel.loadSettings(accId)
-        viewModel.usersLoaded.observe(viewLifecycleOwner, Observer {
+        viewModel.loadUsers.observe(viewLifecycleOwner, Observer {
             if (!it.hasBeenHandled) {
-                toast("Скопировано в буфер обмена")
-                viewModel.copyToClipboard(it.peekContent(), requireContext())
+                startParserService(it.peekContent())
             }
         })
         viewModel.attachFile.observe(viewLifecycleOwner, Observer {
@@ -77,6 +82,16 @@ class SettingsFragment : Fragment(), KodeinAware {
                 else -> binding.spinner.setSelection(0)
             }
         })
+    }
+
+    private fun startParserService(hashMap: HashMap<String, Any>){
+        val settings = hashMap[SETTINGS] as Settings
+        val account = hashMap[ACCOUNT] as Account
+        val intent = Intent(requireContext(), ParserService::class.java).apply {
+            putExtra(ACCOUNT, Gson().toJson(account))
+            putExtra(SETTINGS, Gson().toJson(settings))
+        }
+        requireActivity().startService(intent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

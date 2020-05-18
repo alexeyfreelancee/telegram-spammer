@@ -4,9 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
-        <import type="android.view.View" />
-
         <variable
             name="viewmodel"
             type="com.example.telegramspam.ui.settings.SettingsViewModel" />
@@ -247,11 +244,7 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.core.widget.NestedScrollView>
 
-        <ProgressBar
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:layout_centerInParent="true"
-            android:visibility="@{viewmodel.dataLoading ? View.VISIBLE : View.GONE}" />
+
     </RelativeLayout>
 
 

@@ -1,26 +1,24 @@
 package com.example.telegramspam.ui.settings
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.os.Handler
 import android.view.View
 import androidx.lifecycle.*
+import com.example.telegramspam.*
 import com.example.telegramspam.data.Repository
+import com.example.telegramspam.models.Event
 import com.example.telegramspam.models.Settings
 import com.example.telegramspam.utils.*
 import kotlinx.coroutines.launch
 
-class SettingsViewModel(private val repository: Repository) : ViewModel(), UsersLoadingListener {
+class SettingsViewModel(private val repository: Repository) : ViewModel() {
     private val _settings = MutableLiveData<Settings>()
     val settings: LiveData<Settings> get() = _settings
 
     val attachFile = MutableLiveData<Event<Any>>()
     val showGuide = MutableLiveData<Event<Any>>()
-    val dataLoading = MutableLiveData(false)
     val toast = MutableLiveData<Event<String>>()
-    val usersLoaded = MutableLiveData<Event<String>>()
+    val loadUsers = MutableLiveData<Event<HashMap<String, Any>>>()
 
     val lastOnline = MutableLiveData("")
     val files = MutableLiveData<String>()
@@ -38,9 +36,9 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
     fun saveSettings() = viewModelScope.launch {
         val settings = settings.value
         val files = files.value
-        if(settings!=null){
+        if (settings != null) {
             settings.maxOnlineDifference = calculateMaxOnlineDiff()
-            if(files!=null){
+            if (files != null) {
                 settings.files = files
             }
             repository.saveSettings(settings)
@@ -54,32 +52,24 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
 
     fun loadList(view: View) {
         viewModelScope.launch {
-            val files = files.value
-            if(!files.isNullOrEmpty()){
-                settings.value?.files = files
-            }
-            settings.value?.maxOnlineDifference = calculateMaxOnlineDiff()
-
             if (repository.checkSettings(settings.value, false)) {
-                dataLoading.value = true
-                repository.loadUsers(settings.value!!, this@SettingsViewModel)
+                val files = files.value
+                if (!files.isNullOrEmpty()) {
+                    settings.value?.files = files
+                }
+                settings.value?.maxOnlineDifference = calculateMaxOnlineDiff()
+                loadUsers.value = Event(
+                    hashMapOf(
+                        SETTINGS to settings.value!!,
+                        ACCOUNT to repository.loadAccount(dbPath)
+                    )
+                )
             } else {
-                toast.value = Event("Введите чаты")
+                toast.value =
+                    Event("Введите чаты")
             }
         }
 
-    }
-
-    override fun loaded(users: String, success: Boolean) {
-        viewModelScope.launch {
-            dataLoading.value = false
-            if (success) {
-                usersLoaded.value = Event(users)
-            } else {
-                toast.value = Event(users)
-
-            }
-        }
     }
 
     fun attachFile(view: View) {
@@ -88,30 +78,26 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
 
     fun fileAttached(data: Intent, context: Context) {
         if (settings.value != null) {
-            val list =
+            val filesString =
                 if (settings.value!!.files.isEmpty()) repository.loadFilePaths(data, context)
                 else "${settings.value?.files},${repository.loadFilePaths(data, context)}"
             val resultList = ArrayList<String>()
-            list.split(",").forEach {
+            filesString.split(",").forEach {
                 if (it.length > 3) {
                     resultList.add(it)
                 }
             }
             if (resultList.size > 8) {
-                toast.value = Event("Максимум 8 файлов")
+                toast.value =
+                    Event("Максимум 8 файлов")
             } else {
                 log(resultList)
-                settings.value?.files = list
-                files.value = list
+                settings.value?.files = filesString
+                files.value = filesString
             }
         }
     }
 
-    fun copyToClipboard(users: String, context: Context) {
-        val clipboard =
-            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("users list", users))
-    }
 
     fun removeFile(position: Int) {
         val list = repository.removeFile(position, settings.value)

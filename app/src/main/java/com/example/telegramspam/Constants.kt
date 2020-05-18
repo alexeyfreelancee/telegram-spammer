@@ -1,4 +1,4 @@
-package com.example.telegramspam.utils
+package com.example.telegramspam
 
 
 const val API_HASH = "3f25fe93f89c7e8c90f42d5ecb5c4fcf"
@@ -19,5 +19,8 @@ const val TWELVE_HOUR = "Двенадцать часов назад"
 const val DAY = "День назад"
 const val THREE_DAYS = "Три дня назад"
 const val WEEK = "Неделю назад"
+const val ACCOUNT = "ACCOUNT"
+const val SETTINGS = "SETTINGS"
+const val CLIENT = "CLIENT"
 
 

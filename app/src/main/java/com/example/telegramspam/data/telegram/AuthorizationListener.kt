@@ -1,4 +1,4 @@
-package com.example.telegramspam.utils
+package com.example.telegramspam.data.telegram
 
 import org.drinkless.td.libcore.telegram.TdApi
 

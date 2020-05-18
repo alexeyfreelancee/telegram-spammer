@@ -3,8 +3,7 @@ package com.example.telegramspam.ui.current_account
 import androidx.lifecycle.*
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.models.Account
-import com.example.telegramspam.utils.Event
-import com.example.telegramspam.utils.log
+import com.example.telegramspam.models.Event
 import kotlinx.coroutines.launch
 
 class CurrentAccountViewModel(private val repository: Repository) : ViewModel() {
@@ -42,14 +41,16 @@ class CurrentAccountViewModel(private val repository: Repository) : ViewModel() 
 
     fun openSettings(){
         account.value?.let {
-            openSettings.value = Event(it.databasePath)
+            openSettings.value =
+                Event(it.databasePath)
         }
 
     }
 
     fun startSpam(){
         account.value?.let {
-            startSpam.value = Event(it.databasePath)
+            startSpam.value =
+                Event(it.databasePath)
         }
     }
     fun setupAccount(accountId: Int) = viewModelScope.launch {
@@ -58,7 +59,8 @@ class CurrentAccountViewModel(private val repository: Repository) : ViewModel() 
     }
 
     fun openProxyDialog() {
-        openProxyDialog.value = Event("hello world")
+        openProxyDialog.value =
+            Event("hello world")
     }
 
 }

@@ -1,11 +1,15 @@
 package com.example.telegramspam.utils
 
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.Fragment
@@ -28,6 +32,12 @@ fun View.toast(msg: String) {
     Snackbar.make(this, msg, 1500).show()
 }
 
+fun Context.copyToClipboard(string: String) {
+    val clipboard =
+        this.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText("hello world", string))
+}
+
 fun View.gone(){
     this.visibility = View.GONE
 }
@@ -36,15 +46,6 @@ fun View.visible(){
     this.visibility = View.VISIBLE
 }
 
-fun View.update(){
-    if(this.visibility== View.GONE){
-        this.visible()
-        this.gone()
-    } else{
-        this.gone()
-        this.visible()
-    }
-}
 
 fun Activity.checkStoragePermission(): Boolean {
     if (

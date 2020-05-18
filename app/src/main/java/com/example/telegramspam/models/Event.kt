@@ -1,4 +1,4 @@
-package com.example.telegramspam.utils
+package com.example.telegramspam.models
 
 open class Event<out T>(private val content: T) {
 
