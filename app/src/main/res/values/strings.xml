@@ -15,7 +15,7 @@
     <string name="chats">Чаты</string>
     <string name="delay">Задержка</string>
     <string name="add_file">Прикрепить файлы</string>
-    <string name="hidden_status">Скрытый статус</string>
+    <string name="hidden_status">Пустое описание аккаунта</string>
     <string name="have_photo">Есть фото</string>
     <string name="get_list_now">Получить список сейчас</string>
     <string name="message">Сообщение</string>

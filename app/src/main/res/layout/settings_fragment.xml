@@ -16,11 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ProgressBar
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:layout_centerInParent="true"
-            android:visibility="@{viewmodel.dataLoading ? View.VISIBLE : View.GONE}" />
+
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
@@ -250,6 +246,12 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.core.widget.NestedScrollView>
+
+        <ProgressBar
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_centerInParent="true"
+            android:visibility="@{viewmodel.dataLoading ? View.VISIBLE : View.GONE}" />
     </RelativeLayout>
 
 

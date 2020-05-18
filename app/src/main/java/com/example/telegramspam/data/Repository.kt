@@ -3,8 +3,7 @@ package com.example.telegramspam.data
 import android.content.Context
 import android.content.Intent
 import android.os.Environment
-import android.widget.Toast
-import androidx.core.net.toFile
+import android.os.Handler
 import androidx.lifecycle.LiveData
 import com.example.telegramspam.data.database.AppDatabase
 import com.example.telegramspam.models.Account
@@ -13,21 +12,19 @@ import com.example.telegramspam.utils.AuthorizationListener
 import com.example.telegramspam.utils.UsersLoadingListener
 import com.example.telegramspam.utils.getPath
 import com.example.telegramspam.utils.log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 import java.util.concurrent.ThreadLocalRandom
 
 
 class Repository(private val db: AppDatabase, private val telegram: TelegramAccountsHelper) {
-    fun removeFile(position: Int, settings: Settings?) :String{
-        return if(settings!=null){
+
+    fun removeFile(position: Int, settings: Settings?): String {
+        return if (settings != null) {
             val files = ArrayList<String>()
             settings.files.split(",").forEach {
-                if(it.length > 3)files.add(it)
+                if (it.length > 3) files.add(it)
             }
             val result = java.lang.StringBuilder()
             files.removeAt(position)
@@ -36,17 +33,18 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
                 result.append("$it,")
             }
             result.toString().dropLast(1)
-        } else{
+        } else {
             ""
         }
     }
-    fun checkSettings(settings: Settings?, beforeSpam:Boolean) : Boolean{
-        if(settings !=null){
-            return if(beforeSpam){
+
+    fun checkSettings(settings: Settings?, beforeSpam: Boolean): Boolean {
+        if (settings != null) {
+            return if (beforeSpam) {
                 val chats = settings.chats.split(",")
                 val chatsOk = chats.isNotEmpty() && chats[0].startsWith("@") && chats[0].length > 1
                 settings.delay.isNotEmpty() && settings.message.isNotEmpty() && chatsOk
-            }else{
+            } else {
                 val chats = settings.chats.split(",")
                 return chats.isNotEmpty() && chats[0].startsWith("@") && chats[0].length > 1
             }
@@ -54,7 +52,8 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
 
         return false
     }
-    fun loadFilePaths(data: Intent, context: Context) : String{
+
+    fun loadFilePaths(data: Intent, context: Context): String {
         val pathList = ArrayList<String>()
         if (data.clipData != null) {
             for (i in 0 until data.clipData!!.itemCount) {
@@ -65,7 +64,7 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
         }
         val result = StringBuilder()
         pathList.forEach {
-            if(it.isNotEmpty()) result.append("$it,")
+            if (it.isNotEmpty()) result.append("$it,")
         }
         log(result.toString().dropLast(1))
         return result.toString().dropLast(1)
@@ -73,19 +72,20 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
 
 
     fun loadAccountList(settings: Settings, listener: UsersLoadingListener) {
-        log(settings.chats)
         val list = settings.chats.split(",")
         val client = telegram.getByDbPath(settings.dbPath)
         if (client != null) {
             list.forEach {
-                client.send(TdApi.SearchPublicChat(it)) { chat ->
-                    if (chat is TdApi.Chat && chat.type is TdApi.ChatTypeSupergroup) {
-                        val type = chat.type
-                        if (type is TdApi.ChatTypeSupergroup) {
-                            parseUsersFromChat(client, type, settings, listener)
+                if (it.length > 3) {
+                    client.send(TdApi.SearchPublicChat(it)) { chat ->
+                        if (chat is TdApi.Chat && chat.type is TdApi.ChatTypeSupergroup) {
+                            val type = chat.type
+                            if (type is TdApi.ChatTypeSupergroup) {
+                                parseUsersFromChat(client, type, settings, listener)
+                            }
+                        } else if (chat is TdApi.Error) {
+                            log(chat)
                         }
-                    } else if(chat is TdApi.Error){
-                        listener.loaded("", false)
                     }
                 }
             }
@@ -95,15 +95,15 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
     private fun parseUsersFromChat(
         client: Client,
         type: TdApi.ChatTypeSupergroup,
-        settings: Settings,listener: UsersLoadingListener
+        settings: Settings, listener: UsersLoadingListener
     ) {
+
         client.send(TdApi.GetSupergroupMembers(type.supergroupId, null, 0, 200)) { members ->
-            if(members is TdApi.ChatMembers){
+            if (members is TdApi.ChatMembers) {
                 var offset = 0
-                var counter1 = 0
-                val count1 = members.totalCount / 200
+                val count = members.totalCount / 200
                 val resultList = HashSet<String>()
-                for (i in 0..count1) {
+                for (i in 0..count) {
                     client.send(
                         TdApi.GetSupergroupMembers(
                             type.supergroupId,
@@ -113,67 +113,78 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
                         )
                     ) { result ->
                         if (result is TdApi.ChatMembers) {
-                            var counter2 = 0
-                            val count2 = result.members.size
-
                             result.members.forEach {
                                 client.send(TdApi.GetUser(it.userId)) { user ->
-                                    if (user is TdApi.User) {
-                                        counter2+=1
-                                        log("counter1 $counter1 and count1 $count1")
-                                        log("counter2 $counter2 and count2 $count2")
-                                        val lastRun = counter1 >= count1 && counter2 >= count2
-                                        checkUserBySettings(settings, user, resultList, lastRun,listener)
-                                    } else if(user is TdApi.Error){
-                                        listener.loaded("", false)
-                                    }
 
+                                    if (user is TdApi.User) {
+                                        checkUserBySettings(
+                                            client,
+                                            settings,
+                                            user,
+                                            resultList,
+                                            listener
+                                        )
+                                    }
                                 }
                             }
-                        } else if(result is TdApi.Error){
-                            listener.loaded("", false)
                         }
-                        counter1+=1
                     }
                     offset += 200
                 }
-            } else if(members is TdApi.Error){
-                listener.loaded("", false)
             }
-
         }
-
-
     }
 
     private fun checkUserBySettings(
+        client: Client,
         settings: Settings,
         user: TdApi.User,
-        resultList:HashSet<String>,
-        lastRun:Boolean,
+        resultList: HashSet<String>,
         listener: UsersLoadingListener
     ) {
-        val zero: Long = 0
-        if (!user.username.isNullOrEmpty()) {
-            if ((user.profilePhoto?.id != zero && settings.havePhoto) || (!settings.havePhoto && user.profilePhoto?.id == zero)) {
-                val status = user.status
-                val minOnline = System.currentTimeMillis() / 1000 - settings.maxOnlineDifference
-                if (status.constructor == TdApi.UserStatusOnline.CONSTRUCTOR || (status.constructor == TdApi.UserStatusOffline.CONSTRUCTOR && minOnline <=  (status as TdApi.UserStatusOffline).wasOnline )) {
-                    resultList.add("@${user.username}")
-                }
+        client.send(TdApi.GetUserFullInfo(user.id)) { fullInfo ->
+            if (checkOnline(user.status, settings.maxOnlineDifference)) {
+                resultList.add("@${user.username}")
+                log("added ${resultList.size}")
+                checkLoaded(resultList, listener)
+            }
+            if (fullInfo is TdApi.UserFullInfo && !user.username.isNullOrEmpty()) {
+                if (user.profilePhoto != null == settings.havePhoto) {
+                    if (settings.hiddenStatus == fullInfo.bio.isEmpty()) {
 
+                    }
+                }
             }
         }
-        if(lastRun){
+    }
+
+
+    private fun checkLoaded(resultList: HashSet<String>, listener: UsersLoadingListener) = CoroutineScope(Dispatchers.IO).launch{
+        val beforeSize = resultList.size
+        delay(10000)
+        if (beforeSize == resultList.size) {
             val users = StringBuilder()
             resultList.forEach { username ->
                 users.append("$username,")
             }
-            listener.loaded(users.toString().dropLast(1), true)
+            if (resultList.isEmpty()) {
+                listener.loaded("Ничего не найдено", false)
+            } else {
+                listener.loaded(users.toString().dropLast(1), true)
+            }
         }
     }
 
-
+    private fun checkOnline(status: TdApi.UserStatus, maxOnlineDifference: Long): Boolean {
+        return when (status) {
+            is TdApi.UserStatusOffline -> {
+                val minOnline = System.currentTimeMillis() / 1000 - maxOnlineDifference - (60 * 5)
+                return minOnline <= status.wasOnline
+            }
+            is TdApi.UserStatusLastMonth -> false
+            else -> true
+        }
+    }
 
     suspend fun loadSettings(dbPath: String): Settings? {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {

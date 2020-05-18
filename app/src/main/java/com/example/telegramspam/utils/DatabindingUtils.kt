@@ -28,7 +28,6 @@ fun setFile(view: ImageView, stringFiles:String?){
                 files.add(it)
             }
         }
-        log(files.size)
         when(view.id){
             R.id.first ->{
                 if(files.isNotEmpty() && files[0].isNotEmpty()){

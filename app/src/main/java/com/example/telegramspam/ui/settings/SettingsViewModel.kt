@@ -19,27 +19,33 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
     val attachFile = MutableLiveData<Event<Any>>()
     val showGuide = MutableLiveData<Event<Any>>()
     val dataLoading = MutableLiveData(false)
-    val lastOnline = MutableLiveData("")
     val toast = MutableLiveData<Event<String>>()
     val usersLoaded = MutableLiveData<Event<String>>()
+
+    val lastOnline = MutableLiveData("")
     val files = MutableLiveData<String>()
 
     private var dbPath = ""
-    private var loaded = false
-    fun loadSettings(dbPath: String) = viewModelScope.launch {
 
+    fun loadSettings(dbPath: String) = viewModelScope.launch {
         this@SettingsViewModel.dbPath = dbPath
         val settings = repository.loadSettings(dbPath) ?: Settings()
-        log(settings)
         settings.dbPath = dbPath
         files.value = settings.files
         _settings.value = settings
     }
 
     fun saveSettings() = viewModelScope.launch {
-        settings.value?.let {
-            repository.saveSettings(it.apply { maxOnlineDifference = calculateMaxOnlineDiff() })
+        val settings = settings.value
+        val files = files.value
+        if(settings!=null){
+            settings.maxOnlineDifference = calculateMaxOnlineDiff()
+            if(files!=null){
+                settings.files = files
+            }
+            repository.saveSettings(settings)
         }
+
     }
 
     fun showGuide(view: View) {
@@ -47,15 +53,15 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
     }
 
     fun loadList(view: View) {
+        val files = files.value
+        if(!files.isNullOrEmpty()){
+            settings.value?.files = files
+        }
+        settings.value?.maxOnlineDifference = calculateMaxOnlineDiff()
+
+
         if (repository.checkSettings(settings.value, false)) {
             dataLoading.value = true
-            loaded = false
-            Handler().postDelayed({
-                if (!loaded) {
-                    dataLoading.value = false
-                    toast.value = Event("Ошибка :(")
-                }
-            }, 20000)
             repository.loadAccountList(settings.value!!, this)
         } else {
             toast.value = Event("Введите чаты")
@@ -64,12 +70,12 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
 
     override fun loaded(users: String, success: Boolean) {
         viewModelScope.launch {
-            loaded = true
             dataLoading.value = false
             if (success) {
-                toast.value = Event("Ошибка :(")
-            } else {
                 usersLoaded.value = Event(users)
+            } else {
+                toast.value = Event(users)
+
             }
         }
     }
