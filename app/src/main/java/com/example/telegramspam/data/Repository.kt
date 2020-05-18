@@ -3,9 +3,10 @@ package com.example.telegramspam.data
 import android.content.Context
 import android.content.Intent
 import android.os.Environment
-import android.os.Handler
 import androidx.lifecycle.LiveData
 import com.example.telegramspam.data.database.AppDatabase
+import com.example.telegramspam.data.telegram.TelegramAccountsHelper
+import com.example.telegramspam.data.telegram.TelegramUtil
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.Settings
 import com.example.telegramspam.utils.AuthorizationListener
@@ -18,7 +19,11 @@ import org.drinkless.td.libcore.telegram.TdApi
 import java.util.concurrent.ThreadLocalRandom
 
 
-class Repository(private val db: AppDatabase, private val telegram: TelegramAccountsHelper) {
+class Repository(
+    private val db: AppDatabase,
+    private val accountsHelper: TelegramAccountsHelper,
+    private val telegram: TelegramUtil
+) {
 
     fun removeFile(position: Int, settings: Settings?): String {
         return if (settings != null) {
@@ -71,108 +76,72 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
     }
 
 
-    fun loadAccountList(settings: Settings, listener: UsersLoadingListener) {
-        val list = settings.chats.split(",")
-        val client = telegram.getByDbPath(settings.dbPath)
-        if (client != null) {
-            list.forEach {
-                if (it.length > 3) {
-                    client.send(TdApi.SearchPublicChat(it)) { chat ->
-                        if (chat is TdApi.Chat && chat.type is TdApi.ChatTypeSupergroup) {
-                            val type = chat.type
-                            if (type is TdApi.ChatTypeSupergroup) {
-                                parseUsersFromChat(client, type, settings, listener)
-                            }
-                        } else if (chat is TdApi.Error) {
-                            log(chat)
-                        }
+     suspend fun loadUsers(settings: Settings, listener: UsersLoadingListener) {
+        CoroutineScope(Dispatchers.IO).launch {
+            runBlocking {
+                val resultList = ArrayList<String>()
+                val chats = ArrayList<TdApi.ChatTypeSupergroup>()
+                val client = accountsHelper.getByDbPath(settings.dbPath)!!
+
+                settings.chats.split(",").forEach { link ->
+                    if (link.length > 3) {
+                        chats.add(telegram.getChat(client, link))
                     }
                 }
-            }
-        }
-    }
 
-    private fun parseUsersFromChat(
-        client: Client,
-        type: TdApi.ChatTypeSupergroup,
-        settings: Settings, listener: UsersLoadingListener
-    ) {
+                val chatMembers = ArrayList<TdApi.ChatMember>()
 
-        client.send(TdApi.GetSupergroupMembers(type.supergroupId, null, 0, 200)) { members ->
-            if (members is TdApi.ChatMembers) {
-                var offset = 0
-                val count = members.totalCount / 200
-                val resultList = HashSet<String>()
-                for (i in 0..count) {
-                    client.send(
-                        TdApi.GetSupergroupMembers(
-                            type.supergroupId,
-                            null,
-                            offset,
-                            200
-                        )
-                    ) { result ->
-                        if (result is TdApi.ChatMembers) {
-                            result.members.forEach {
-                                client.send(TdApi.GetUser(it.userId)) { user ->
-
-                                    if (user is TdApi.User) {
-                                        checkUserBySettings(
-                                            client,
-                                            settings,
-                                            user,
-                                            resultList,
-                                            listener
-                                        )
-                                    }
-                                }
-                            }
+                chats.forEach { chat ->
+                    val info = telegram.getChatMembers(client, chat, 0)
+                    var offset = 0
+                    val count = info.totalCount / 200
+                    for (i in 0..count) {
+                        telegram.getChatMembers(client, chat, offset).members.forEach {
+                            chatMembers.add(it)
                         }
+                        offset += 200
                     }
-                    offset += 200
                 }
+
+                val users = ArrayList<TdApi.User>()
+                chatMembers.forEach { member ->
+                    users.add(telegram.getUser(client, member.userId))
+                }
+
+
+                users.forEach {user->
+                    val fullInfo = telegram.getUserFullInfo(client, user)
+                    if(checkUserBySettings(user, settings, fullInfo)){
+                        resultList.add(user.username)
+                    }
+                }
+
+
+                val usersString = java.lang.StringBuilder()
+                resultList.forEach {
+                    usersString.append(it)
+                }
+                listener.loaded(usersString.toString().dropLast(1), true)
             }
         }
+
+
     }
+
 
     private fun checkUserBySettings(
-        client: Client,
-        settings: Settings,
-        user: TdApi.User,
-        resultList: HashSet<String>,
-        listener: UsersLoadingListener
-    ) {
-        client.send(TdApi.GetUserFullInfo(user.id)) { fullInfo ->
-            if (checkOnline(user.status, settings.maxOnlineDifference)) {
-                resultList.add("@${user.username}")
-                log("added ${resultList.size}")
-                checkLoaded(resultList, listener)
-            }
-            if (fullInfo is TdApi.UserFullInfo && !user.username.isNullOrEmpty()) {
-                if (user.profilePhoto != null == settings.havePhoto) {
-                    if (settings.hiddenStatus == fullInfo.bio.isEmpty()) {
-
+        user: TdApi.User, settings: Settings, fullInfo: TdApi.UserFullInfo
+    ) : Boolean{
+        if (!user.username.isNullOrEmpty()) {
+            if (user.profilePhoto != null == settings.havePhoto) {
+                if (settings.hiddenStatus == fullInfo.bio.isEmpty()) {
+                    if (checkOnline(user.status, settings.maxOnlineDifference)) {
+                        return true
                     }
                 }
             }
         }
-    }
-
-
-    private fun checkLoaded(resultList: HashSet<String>, listener: UsersLoadingListener) = CoroutineScope(Dispatchers.IO).launch{
-        val beforeSize = resultList.size
-        delay(10000)
-        if (beforeSize == resultList.size) {
-            val users = StringBuilder()
-            resultList.forEach { username ->
-                users.append("$username,")
-            }
-            if (resultList.isEmpty()) {
-                listener.loaded("Ничего не найдено", false)
-            } else {
-                listener.loaded(users.toString().dropLast(1), true)
-            }
-        }
+        return false
     }
 
     private fun checkOnline(status: TdApi.UserStatus, maxOnlineDifference: Long): Boolean {
@@ -230,7 +199,7 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
                 this.proxyType = proxyType
             }
             log("updated proxy $proxyIp:$proxyPort  type = $proxyType")
-            telegram.addProxy(databasePath, proxyIp, proxyPort, username, pass, proxyType)
+            accountsHelper.addProxy(databasePath, proxyIp, proxyPort, username, pass, proxyType)
             db.accountsDao().insert(account)
         }
     }
@@ -257,14 +226,14 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
         dbPath: String,
         listener: AuthorizationListener
     ) {
-        telegram.finishAuthentication(smsCode, dbPath, listener)
+        accountsHelper.finishAuthentication(smsCode, dbPath, listener)
     }
 
     fun startAuthentication(
         dbPath: String,
         listener: AuthorizationListener
     ) {
-        telegram.startAuthentication(dbPath, listener)
+        accountsHelper.startAuthentication(dbPath, listener)
     }
 
     fun enterPhoneNumber(
@@ -272,7 +241,7 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
         phoneNumber: String,
         listener: AuthorizationListener
     ) {
-        telegram.enterPhoneNumber(dbPath, phoneNumber, listener)
+        accountsHelper.enterPhoneNumber(dbPath, phoneNumber, listener)
     }
 
     fun saveAccount(
@@ -292,7 +261,7 @@ class Repository(private val db: AppDatabase, private val telegram: TelegramAcco
                 databasePath = databasePath
             )
         } else {
-            telegram.addProxy(
+            accountsHelper.addProxy(
                 databasePath,
                 proxyIp!!,
                 proxyPort!!.toInt(),

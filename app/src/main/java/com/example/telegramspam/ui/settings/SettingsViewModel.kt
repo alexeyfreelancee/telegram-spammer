@@ -53,19 +53,21 @@ class SettingsViewModel(private val repository: Repository) : ViewModel(), Users
     }
 
     fun loadList(view: View) {
-        val files = files.value
-        if(!files.isNullOrEmpty()){
-            settings.value?.files = files
-        }
-        settings.value?.maxOnlineDifference = calculateMaxOnlineDiff()
+        viewModelScope.launch {
+            val files = files.value
+            if(!files.isNullOrEmpty()){
+                settings.value?.files = files
+            }
+            settings.value?.maxOnlineDifference = calculateMaxOnlineDiff()
 
-
-        if (repository.checkSettings(settings.value, false)) {
-            dataLoading.value = true
-            repository.loadAccountList(settings.value!!, this)
-        } else {
-            toast.value = Event("Введите чаты")
+            if (repository.checkSettings(settings.value, false)) {
+                dataLoading.value = true
+                repository.loadUsers(settings.value!!, this@SettingsViewModel)
+            } else {
+                toast.value = Event("Введите чаты")
+            }
         }
+
     }
 
     override fun loaded(users: String, success: Boolean) {

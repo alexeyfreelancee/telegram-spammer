@@ -20,7 +20,11 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
+    kotlin {
+        experimental {
+            coroutines "enable"
+        }
+    }
     dataBinding {
         enabled = true
     }
