@@ -5,18 +5,19 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
 import android.os.Build
-import android.os.Environment
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.ArrayList
+
 
 fun log(vararg messages: Any?) {
     messages.forEach { msg ->
@@ -43,6 +44,12 @@ fun View.toast(msg: String) {
     Snackbar.make(this, msg, 1500).show()
 }
 
+fun connected(view: View) : Boolean{
+    val context = view.context
+    val cm =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    return cm.activeNetworkInfo != null && cm.activeNetworkInfo.isConnected
+}
  fun List<String>.getRandom():String{
     val position =  Random().nextInt(this.size)
     return this[position]

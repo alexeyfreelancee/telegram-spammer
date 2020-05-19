@@ -51,23 +51,27 @@ class SettingsViewModel(private val repository: Repository) : ViewModel() {
     }
 
     fun loadList(view: View) {
-        viewModelScope.launch {
-            if (repository.checkSettings(settings.value, false)) {
-                val files = files.value
-                if (!files.isNullOrEmpty()) {
-                    settings.value?.files = files
-                }
-                settings.value?.maxOnlineDifference = calculateMaxOnlineDiff()
-                loadUsers.value = Event(
-                    hashMapOf(
-                        SETTINGS to settings.value!!,
-                        ACCOUNT to repository.loadAccount(dbPath)
+        if(connected(view)){
+            viewModelScope.launch {
+                if (repository.checkSettings(settings.value, false)) {
+                    val files = files.value
+                    if (!files.isNullOrEmpty()) {
+                        settings.value?.files = files
+                    }
+                    settings.value?.maxOnlineDifference = calculateMaxOnlineDiff()
+                    loadUsers.value = Event(
+                        hashMapOf(
+                            SETTINGS to settings.value!!,
+                            ACCOUNT to repository.loadAccount(dbPath)
+                        )
                     )
-                )
-            } else {
-                toast.value =
-                    Event("Введите чаты")
+                } else {
+                    toast.value =
+                        Event("Введите чаты")
+                }
             }
+        }else{
+            toast.value = Event(NO_INTERNET)
         }
 
     }

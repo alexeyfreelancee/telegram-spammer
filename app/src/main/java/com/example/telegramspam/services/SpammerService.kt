@@ -52,6 +52,7 @@ class SpammerService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        log("destroy")
         client?.close()
     }
 
@@ -109,28 +110,31 @@ class SpammerService : Service() {
         var successCounter = 0
         var errorsCounter = 0
         for ((i, user) in usersChecked.withIndex()) {
-            //TODO REMOVE THIS CHECK
-            if(i==0){
-                val success = telegram.sendMessage(client, settings, user)
-                if(success) {
-                    successCounter++
-                    applicationContext.sendNotification("Sent ${i+1}/${usersChecked.size} messages", id)
-                    if (settings.block) {
-                        telegram.blockUser(client, user.id)
-                    }
-                    val delay = settings.delay.toInt() * 1000
-                    delay(delay.toLong())
-                } else{
-                    errorsCounter++
+            val success = telegram.prepareMessage(client, settings, user)
+            if (success) {
+                successCounter++
+                applicationContext.sendNotification(
+                    "Sent ${i + 1}/${usersChecked.size} messages",
+                    id
+                )
+                if (settings.block) {
+                    telegram.blockUser(client, user.id)
                 }
+                val delay = settings.delay.toInt() * 1000
+                delay(delay.toLong())
+            } else {
+                errorsCounter++
             }
-
         }
 
-        applicationContext.sendNotification("Spam finished. Success $successCounter Errors $errorsCounter", id)
+        applicationContext.sendNotification(
+            "Spam finished. Success $successCounter Errors $errorsCounter",
+            id
+        )
         client.close()
         stopSelf()
     }
+
 
 
 }

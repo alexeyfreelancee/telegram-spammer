@@ -8,6 +8,7 @@ import com.example.telegramspam.models.Settings
 import com.example.telegramspam.utils.getRandom
 import com.example.telegramspam.utils.log
 import com.example.telegramspam.utils.removeEmpty
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
@@ -152,66 +153,81 @@ class TelegramClientUtil {
     }
 
     fun blockUser(client: Client, userId: Int) {
-        client.send(TdApi.BlockUser(userId), null)
+        client.send(TdApi.BlockUser(userId)){
+            if(it is TdApi.Error){
+                log(it)
+            }
+        }
     }
 
-    suspend fun sendMessage(
+    suspend fun prepareMessage(
         client: Client,
         settings: Settings,
         user: TdApi.User
     ) = suspendCancellableCoroutine<Boolean> { continuation ->
-        val userId = user.id.toLong()
         val photos = settings.files.split(",").removeEmpty()
         val name = "${user.firstName} ${user.lastName}".trim()
         val message = getRandomMessage(settings.message, name)
         val caption = TdApi.FormattedText(message, null)
 
         if (photos.isEmpty()) {
-
             val content = TdApi.InputMessageText(caption, false, false)
-            client.send(TdApi.SendMessage(userId, 0, null, null, content)) {
-                if (it is TdApi.Error) {
-                    log(it)
-                    continuation.resume(false) {}
-                } else {
-                    continuation.resume(true) {}
-                }
-            }
+            val function =TdApi.SendMessage(user.id.toLong(), 0, null, null, content)
+            sendMessage(client,continuation,function,user.id)
         } else {
-            val paths = photos.removeEmpty()
-            var contentList = emptyArray<TdApi.InputMessageContent>()
-
-            for ((index, path) in paths.withIndex()) {
-                val photo = TdApi.InputFileLocal(path)
-                val content = if (index == 0) {
-                    TdApi.InputMessagePhoto(photo, null, null, 300, 300, caption, 0)
-                } else {
-                    TdApi.InputMessagePhoto(photo, null, null, 300, 300, null, 0)
-                }
-                contentList += content
-
-            }
-
-
-            client.send(
-                TdApi.SendMessageAlbum(
-                    userId,
-                    0,
-                    null,
-                    contentList
-                )
-            ) {
-                if (it is TdApi.Error) {
-                    log(it)
-                    continuation.resume(false) {}
-                } else {
-                    continuation.resume(true) {}
-                }
-
-            }
+            val function = TdApi.SendMessageAlbum(
+                user.id.toLong(),
+                0,
+                null,
+                createPhotos(caption,photos)
+            )
+            sendMessage(client, continuation, function, user.id)
         }
     }
 
+    private fun createPhotos(caption: TdApi.FormattedText, photos: List<String>) : Array<TdApi.InputMessageContent>{
+        val paths = photos.removeEmpty()
+        var contentList = emptyArray<TdApi.InputMessageContent>()
+
+        for ((index, path) in paths.withIndex()) {
+            val photo = TdApi.InputFileLocal(path)
+            val content = if (index == 0) {
+                TdApi.InputMessagePhoto(photo, null, null, 300, 300, caption, 0)
+            } else {
+                TdApi.InputMessagePhoto(photo, null, null, 300, 300, null, 0)
+            }
+            contentList += content
+
+        }
+        return contentList
+    }
+
+    private fun sendMessage(client: Client, continuation: CancellableContinuation<Boolean>, function: TdApi.Function, userId:Int){
+        client.send(function) {
+            if (it is TdApi.Error) {
+                if(it.code == 5){
+                    client.send(TdApi.CreatePrivateChat(userId, false)){result->
+                        if(result is TdApi.Error){
+                            continuation.resume(false){}
+                        }else{
+                            client.send(function){res ->
+                                if(res is TdApi.Error){
+                                    continuation.resume(false){}
+                                } else{
+                                    continuation.resume(true){}
+                                }
+                            }
+                        }
+                    }
+                } else{
+                    continuation.resume(false) {}
+                }
+            } else {
+                continuation.resume(true) {}
+            }
+
+        }
+    }
 
     private fun getRandomMessage(message: String, name: String): String {
         var result = message.replace("@name", name)

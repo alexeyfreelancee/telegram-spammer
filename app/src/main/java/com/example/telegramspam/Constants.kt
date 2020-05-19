@@ -22,5 +22,6 @@ const val WEEK = "Неделю назад"
 const val ACCOUNT = "ACCOUNT"
 const val SETTINGS = "SETTINGS"
 const val CLIENT = "CLIENT"
+const val NO_INTERNET = "Нет подключения к интернету"
 
 

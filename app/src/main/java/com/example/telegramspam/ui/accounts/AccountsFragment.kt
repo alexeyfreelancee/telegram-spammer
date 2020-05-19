@@ -14,6 +14,7 @@ import com.example.telegramspam.adapters.AccountsListAdapter
 import com.example.telegramspam.databinding.AccountsFragmentBinding
 
 import com.example.telegramspam.ACC_ID
+import com.example.telegramspam.utils.toast
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
 import org.kodein.di.generic.instance
@@ -71,6 +72,11 @@ class AccountsFragment : Fragment(), KodeinAware {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val navController = Navigation.findNavController(view)
+        viewModel.toast.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                toast(it.peekContent())
+            }
+        })
         viewModel.openAccount.observe(viewLifecycleOwner, Observer {
             if (!it.hasBeenHandled) {
                 val bundle = Bundle()

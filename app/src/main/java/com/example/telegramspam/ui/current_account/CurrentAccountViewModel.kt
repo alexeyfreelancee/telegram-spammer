@@ -1,11 +1,14 @@
 package com.example.telegramspam.ui.current_account
 
+import android.view.View
 import androidx.lifecycle.*
 import com.example.telegramspam.ACCOUNT
+import com.example.telegramspam.NO_INTERNET
 import com.example.telegramspam.SETTINGS
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.Event
+import com.example.telegramspam.utils.connected
 import kotlinx.coroutines.launch
 
 class CurrentAccountViewModel(private val repository: Repository) : ViewModel() {
@@ -48,21 +51,26 @@ class CurrentAccountViewModel(private val repository: Repository) : ViewModel() 
         }
     }
 
-    fun startSpam() {
-        viewModelScope.launch {
-            account.value?.let {
-                val settings = repository.loadSettings(it.databasePath)
-                if (repository.checkSettings(settings, true)) {
-                    val data = hashMapOf(
-                        SETTINGS to settings!!,
-                        ACCOUNT to it
-                    )
-                    startSpam.value = Event(data)
-                } else{
-                    toast.value = Event("Заполните все поля в настройках")
+    fun startSpam(view: View) {
+        if(connected(view)){
+            viewModelScope.launch {
+                account.value?.let {
+                    val settings = repository.loadSettings(it.databasePath)
+                    if (repository.checkSettings(settings, true)) {
+                        val data = hashMapOf(
+                            SETTINGS to settings!!,
+                            ACCOUNT to it
+                        )
+                        startSpam.value = Event(data)
+                    } else{
+                        toast.value = Event("Заполните все поля в настройках")
+                    }
                 }
             }
+        }else{
+            toast.value = Event(NO_INTERNET)
         }
+
     }
 
 
