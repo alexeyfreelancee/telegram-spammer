@@ -13,7 +13,7 @@ import com.example.telegramspam.R
 const val CHANNEL_ID = "Telegram spammer channel"
 const val PARSER_ID = 1234
 const val SPAMMER_ID = 431
-
+const val ERROR_ID = 234
 fun createNotificationChannels(context: Context) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         val channel1 = NotificationChannel(

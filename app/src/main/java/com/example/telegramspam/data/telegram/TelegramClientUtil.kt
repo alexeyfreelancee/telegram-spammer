@@ -3,6 +3,7 @@ package com.example.telegramspam.data.telegram
 import com.example.telegramspam.API_HASH
 import com.example.telegramspam.API_ID
 import com.example.telegramspam.SOCKS5
+import com.example.telegramspam.models.ClientCreateResult
 import com.example.telegramspam.models.Settings
 import com.example.telegramspam.utils.log
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -11,7 +12,7 @@ import org.drinkless.td.libcore.telegram.TdApi
 
 class TelegramClientUtil {
 
-    suspend fun createClient(account: com.example.telegramspam.models.Account): Client {
+    suspend fun createClient(account: com.example.telegramspam.models.Account): ClientCreateResult {
         return suspendCancellableCoroutine { continuation ->
             var client: Client? = null
             client = Client.create({ state ->
@@ -20,14 +21,22 @@ class TelegramClientUtil {
                         when (state.authorizationState.constructor) {
                             TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR -> {
                                 val params = generateParams(account.databasePath)
-                                client?.send(TdApi.SetTdlibParameters(params), null)
+                                client?.send(TdApi.SetTdlibParameters(params)){
+                                    if(it is TdApi.Error){
+                                        continuation.resume(ClientCreateResult.Error(it.message)){}
+                                    }
+                                }
                             }
                             TdApi.AuthorizationStateWaitEncryptionKey.CONSTRUCTOR -> {
-                                client?.send(TdApi.CheckDatabaseEncryptionKey(), null)
+                                client?.send(TdApi.CheckDatabaseEncryptionKey()){
+                                    if(it is TdApi.Error){
+                                        continuation.resume(ClientCreateResult.Error(it.message)){}
+                                    }
+                                }
                             }
                             TdApi.AuthorizationStateReady.CONSTRUCTOR -> {
                                 if (client != null) {
-                                    continuation.resume(client!!) {}
+                                    continuation.resume(ClientCreateResult.Success(client!!)) {}
                                 }
 
                             }
