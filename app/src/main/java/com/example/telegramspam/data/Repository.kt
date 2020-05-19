@@ -6,7 +6,7 @@ import android.os.Environment
 import androidx.lifecycle.LiveData
 import com.example.telegramspam.data.database.AppDatabase
 import com.example.telegramspam.data.telegram.TelegramAuthUtil
-import com.example.telegramspam.data.telegram.addProxy
+
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.Settings
 import com.example.telegramspam.data.telegram.AuthorizationListener
@@ -14,6 +14,7 @@ import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.utils.generateRandomInt
 import com.example.telegramspam.utils.getPath
 import com.example.telegramspam.utils.log
+import com.example.telegramspam.utils.removeEmpty
 import kotlinx.coroutines.*
 import org.drinkless.td.libcore.telegram.TdApi
 import java.util.concurrent.ThreadLocalRandom
@@ -48,9 +49,8 @@ class Repository(
     fun checkSettings(settings: Settings?, beforeSpam: Boolean): Boolean {
         if (settings != null) {
             return if (beforeSpam) {
-                val chats = settings.chats.split(",")
-                val chatsOk = chats.isNotEmpty() && chats[0].startsWith("@") && chats[0].length > 1
-                settings.delay.isNotEmpty() && settings.message.isNotEmpty() && chatsOk
+                val chats = settings.chats.split(",").removeEmpty()
+                settings.delay.isNotEmpty() && settings.message.isNotEmpty() && chats.isNotEmpty()
             } else {
                 val chats = settings.chats.split(",")
                 return chats.isNotEmpty() && chats[0].startsWith("@") && chats[0].length > 1
@@ -148,7 +148,6 @@ class Repository(
 
     fun finishAuthentication(
         smsCode: String,
-        dbPath: String,
         listener: AuthorizationListener
     ) {
         authUtil.finishAuthentication(smsCode, listener)

@@ -40,7 +40,6 @@ class AddAccountViewModel(
         if (checkFields(true)) {
             repository.finishAuthentication(
                 code.value!!,
-                databasePath,
                 listener
             )
         }

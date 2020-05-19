@@ -11,8 +11,6 @@ import com.example.telegramspam.utils.removeEmpty
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
-import java.util.*
-import kotlin.collections.ArrayList
 
 class TelegramClientUtil {
 
@@ -59,8 +57,6 @@ class TelegramClientUtil {
                 )
             }
         }
-
-
     }
 
 
@@ -105,11 +101,12 @@ class TelegramClientUtil {
     }
 
     fun checkUserBySettings(
-        user: TdApi.User, settings: Settings, fullInfo: TdApi.UserFullInfo
+        user: TdApi.User, settings: Settings
     ): Boolean {
         if (user.profilePhoto != null == settings.havePhoto) {
-            if (settings.hiddenStatus == fullInfo.bio.isEmpty()) {
-                if (checkOnline(user.status, settings.maxOnlineDifference)) {
+            if (checkOnline(user.status, settings.maxOnlineDifference)) {
+                val emptyStatus = user.status.constructor == TdApi.UserStatusEmpty.CONSTRUCTOR
+                if (emptyStatus == settings.hiddenStatus) {
                     return true
                 }
             }
@@ -123,11 +120,8 @@ class TelegramClientUtil {
                 val minOnline = System.currentTimeMillis() / 1000 - maxOnlineDifference
                 return minOnline <= status.wasOnline
             }
-            is TdApi.UserStatusLastMonth -> false
-            is TdApi.UserStatusRecently -> {
-                val zero: Long = 0
-                return maxOnlineDifference != zero
-            }
+            is TdApi.UserStatusRecently -> true
+            is TdApi.UserStatusEmpty -> true
             is TdApi.UserStatusOnline -> true
             else -> false
         }
@@ -150,6 +144,7 @@ class TelegramClientUtil {
                 if (members is TdApi.ChatMembers) {
                     continuation.resume(members) {}
                 } else {
+                    client.close()
                     log(members)
                 }
             }
@@ -163,42 +158,65 @@ class TelegramClientUtil {
     suspend fun sendMessage(
         client: Client,
         settings: Settings,
-       user:TdApi.User
-    ) = suspendCancellableCoroutine<Unit> { continuation ->
+        user: TdApi.User
+    ) = suspendCancellableCoroutine<Boolean> { continuation ->
         val userId = user.id.toLong()
         val photos = settings.files.split(",").removeEmpty()
-        val message = getRandomMessage(settings.message)
+        val name = "${user.firstName} ${user.lastName}".trim()
+        val message = getRandomMessage(settings.message, name)
         val caption = TdApi.FormattedText(message, null)
 
         if (photos.isEmpty()) {
+
             val content = TdApi.InputMessageText(caption, false, false)
-            client.send(TdApi.SendMessage(userId, 0, null, null, content)) {}
-        } else {
-            val contentList = ArrayList<TdApi.InputMessageContent>()
-            photos.forEach { path ->
-                if (path.length > 3) {
-                    val photo = TdApi.InputFileLocal(path)
-                    val content = TdApi.InputMessagePhoto(photo, null, null, 300, 300, null, 0)
-                    contentList.add(content)
+            client.send(TdApi.SendMessage(userId, 0, null, null, content)) {
+                if (it is TdApi.Error) {
+                    log(it)
+                    continuation.resume(false) {}
+                } else {
+                    continuation.resume(true) {}
                 }
             }
+        } else {
+            val paths = photos.removeEmpty()
+            var contentList = emptyArray<TdApi.InputMessageContent>()
+
+            for ((index, path) in paths.withIndex()) {
+                val photo = TdApi.InputFileLocal(path)
+                val content = if (index == 0) {
+                    TdApi.InputMessagePhoto(photo, null, null, 300, 300, caption, 0)
+                } else {
+                    TdApi.InputMessagePhoto(photo, null, null, 300, 300, null, 0)
+                }
+                contentList += content
+
+            }
+
+
             client.send(
                 TdApi.SendMessageAlbum(
                     userId,
                     0,
                     null,
-                    contentList.toArray() as Array<out TdApi.InputMessageContent>
+                    contentList
                 )
             ) {
-                continuation.resume(Unit) {}
+                if (it is TdApi.Error) {
+                    log(it)
+                    continuation.resume(false) {}
+                } else {
+                    continuation.resume(true) {}
+                }
+
             }
         }
     }
 
 
-    private fun getRandomMessage(message: String):String {
-        var result = message
-        val pattern = Regex("<\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?>")
+    private fun getRandomMessage(message: String, name: String): String {
+        var result = message.replace("@name", name)
+        val pattern =
+            Regex("<\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?>")
         pattern.findAll(message).forEach { resultMatch ->
             val words = resultMatch.value.split("[|<>]".toRegex()).removeEmpty()
             result = result.replace(resultMatch.value, words.getRandom())
@@ -214,6 +232,7 @@ class TelegramClientUtil {
                     if (type is TdApi.ChatTypeSupergroup) {
                         continuation.resume(type) {}
                     } else {
+                        client.close()
                         log(type)
                     }
                 }
@@ -227,6 +246,7 @@ class TelegramClientUtil {
                 if (fullInfo is TdApi.UserFullInfo) {
                     continuation.resume(fullInfo) {}
                 } else {
+                    client.close()
                     log(fullInfo)
                 }
             }
@@ -240,6 +260,7 @@ class TelegramClientUtil {
                 if (user is TdApi.User) {
                     continuation.resume(user) {}
                 } else {
+                    client.close()
                     log(user)
                 }
             }
@@ -247,26 +268,3 @@ class TelegramClientUtil {
     }
 }
 
-fun Client.addProxy(
-    proxyIp: String,
-    proxyPort: Int,
-    proxyUsername: String,
-    proxyPass: String,
-    proxyType: String
-) {
-
-    val type = if (proxyType == SOCKS5) {
-        TdApi.ProxyTypeSocks5(proxyUsername, proxyPass)
-    } else {
-        TdApi.ProxyTypeHttp(proxyUsername, proxyPass, false)
-    }
-    this.send(
-        TdApi.AddProxy(
-            proxyIp,
-            proxyPort,
-            true,
-            type
-        ), null
-    )
-
-}

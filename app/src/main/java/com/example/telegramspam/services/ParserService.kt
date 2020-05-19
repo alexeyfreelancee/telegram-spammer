@@ -89,8 +89,7 @@ class ParserService : Service() {
 
             log("total users in chats ${users.size}")
             users.forEach { user ->
-                val fullInfo = telegram.getUserFullInfo(client, user)
-                if (telegram.checkUserBySettings(user, settings, fullInfo)) {
+                if (telegram.checkUserBySettings(user, settings)) {
                     resultList.add(user.username)
                 }
             }

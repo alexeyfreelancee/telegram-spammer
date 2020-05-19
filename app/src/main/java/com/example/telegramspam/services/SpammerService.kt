@@ -26,7 +26,9 @@ class SpammerService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        log("spammer service started")
         if (intent != null) {
+
             CoroutineScope(Dispatchers.IO).launch {
                 val settings =
                     Gson().fromJson(intent.getStringExtra(SETTINGS), Settings::class.java)
@@ -94,8 +96,7 @@ class SpammerService : Service() {
 
         log("total users in chats ${usersNotChecked.size}")
         usersNotChecked.forEach { user ->
-            val fullInfo = telegram.getUserFullInfo(client, user)
-            if (telegram.checkUserBySettings(user, settings, fullInfo)) {
+            if (telegram.checkUserBySettings(user, settings)) {
                 usersChecked.add(user)
             }
         }
@@ -105,17 +106,28 @@ class SpammerService : Service() {
             "Parsed ${usersChecked.size} users",
             id
         )
-
+        var successCounter = 0
+        var errorsCounter = 0
         for ((i, user) in usersChecked.withIndex()) {
-            telegram.sendMessage(client, settings, user)
-            applicationContext.sendNotification("Sent $i/${usersChecked.size} messages", id)
-            if (settings.block) {
-                telegram.blockUser(client, user.id)
+            //TODO REMOVE THIS CHECK
+            if(i==0){
+                val success = telegram.sendMessage(client, settings, user)
+                if(success) {
+                    successCounter++
+                    applicationContext.sendNotification("Sent ${i+1}/${usersChecked.size} messages", id)
+                    if (settings.block) {
+                        telegram.blockUser(client, user.id)
+                    }
+                    val delay = settings.delay.toInt() * 1000
+                    delay(delay.toLong())
+                } else{
+                    errorsCounter++
+                }
             }
-            val delay = settings.delay.toInt() * 1000
-            delay(delay.toLong())
+
         }
 
+        applicationContext.sendNotification("Spam finished. Success $successCounter Errors $errorsCounter", id)
         client.close()
         stopSelf()
     }

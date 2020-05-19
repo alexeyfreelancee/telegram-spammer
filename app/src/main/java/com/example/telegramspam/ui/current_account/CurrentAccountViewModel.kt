@@ -1,6 +1,8 @@
 package com.example.telegramspam.ui.current_account
 
 import androidx.lifecycle.*
+import com.example.telegramspam.ACCOUNT
+import com.example.telegramspam.SETTINGS
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.Event
@@ -12,8 +14,8 @@ class CurrentAccountViewModel(private val repository: Repository) : ViewModel() 
 
     val openProxyDialog = MutableLiveData<Event<String>>()
     val openSettings = MutableLiveData<Event<String>>()
-    val startSpam = MutableLiveData<Event<String>>()
-
+    val startSpam = MutableLiveData<Event<HashMap<String, Any>>>()
+    val toast = MutableLiveData<Event<String>>()
     private var accountId = 0
 
     fun updateProxy(
@@ -23,7 +25,7 @@ class CurrentAccountViewModel(private val repository: Repository) : ViewModel() 
         pass: String,
         proxyType: String
     ) {
-        account.value?.let {acc->
+        account.value?.let { acc ->
             repository.updateProxy(
                 proxyIp, proxyPort,
                 username, pass, proxyType,
@@ -39,20 +41,31 @@ class CurrentAccountViewModel(private val repository: Repository) : ViewModel() 
         }
     }
 
-    fun openSettings(){
+    fun openSettings() {
         account.value?.let {
             openSettings.value =
                 Event(it.databasePath)
         }
-
     }
 
-    fun startSpam(){
-        account.value?.let {
-            startSpam.value =
-                Event(it.databasePath)
+    fun startSpam() {
+        viewModelScope.launch {
+            account.value?.let {
+                val settings = repository.loadSettings(it.databasePath)
+                if (repository.checkSettings(settings, true)) {
+                    val data = hashMapOf(
+                        SETTINGS to settings!!,
+                        ACCOUNT to it
+                    )
+                    startSpam.value = Event(data)
+                } else{
+                    toast.value = Event("Заполните все поля в настройках")
+                }
+            }
         }
     }
+
+
     fun setupAccount(accountId: Int) = viewModelScope.launch {
         this@CurrentAccountViewModel.accountId = accountId
         _account.value = repository.loadAccount(accountId)
