@@ -14,6 +14,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
+import java.util.*
+import java.util.concurrent.ThreadLocalRandom
+import kotlin.collections.ArrayList
 
 fun log(vararg messages: Any?) {
     messages.forEach { msg ->
@@ -27,11 +30,29 @@ fun Fragment.toast(msg: String) {
     Snackbar.make(this.requireView(), msg, 1500).show()
 }
 
-
+fun List<String>.removeEmpty() : List<String>{
+    val result= ArrayList<String>()
+    this.forEach {
+        if(it.isNotBlank()){
+            result.add(it)
+        }
+    }
+    return result
+}
 fun View.toast(msg: String) {
     Snackbar.make(this, msg, 1500).show()
 }
 
+ fun List<String>.getRandom():String{
+    val position =  Random().nextInt(this.size)
+    return this[position]
+}
+
+fun generateRandomInt() : Int =  ThreadLocalRandom.current().nextInt(Int.MIN_VALUE, Int.MAX_VALUE - 1)
+
+fun random(min:Int, max: Int) ={
+
+}
 fun Context.copyToClipboard(string: String) {
     val clipboard =
         this.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

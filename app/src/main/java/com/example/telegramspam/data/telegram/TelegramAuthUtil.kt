@@ -37,6 +37,9 @@ class TelegramAuthUtil(
         }
     }
 
+    fun closeClient(){
+        client?.close()
+    }
     fun startAuthentication(
         dbPath: String,
         listener: AuthorizationListener
@@ -53,6 +56,7 @@ class TelegramAuthUtil(
                         TdApi.AuthorizationStateReady.CONSTRUCTOR -> {
                             log("success auth")
                             client?.send(TdApi.GetMe()) { user ->
+                                client?.close()
                                 listener.success(user as TdApi.User)
                             }
 

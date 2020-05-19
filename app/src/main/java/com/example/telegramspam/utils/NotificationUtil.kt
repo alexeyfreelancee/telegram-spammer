@@ -29,11 +29,11 @@ fun createNotificationChannels(context: Context) {
     }
 }
 
-fun Context.sendNotification(title:String, message:String, id: Int) {
+fun Context.sendNotification(message:String, id: Int) {
     val notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     val notification = NotificationCompat.Builder(this, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_app)
-        .setContentTitle(title)
+        .setContentTitle("Telegram Spammer")
         .setContentText(message)
         .setPriority(NotificationCompat.PRIORITY_LOW)
         .setCategory(NotificationCompat.CATEGORY_MESSAGE)

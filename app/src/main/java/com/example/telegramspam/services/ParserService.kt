@@ -19,6 +19,7 @@ import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 
 class ParserService : Service() {
+    private var client: Client? =  null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
@@ -30,11 +31,10 @@ class ParserService : Service() {
                 val telegram = TelegramClientUtil()
 
                 when (val result = telegram.createClient(account)) {
-                    is ClientCreateResult.Success -> loadUsers(result.client, settings, telegram)
+                    is ClientCreateResult.Success -> loadUsers(result.client, settings, telegram, generateRandomInt())
                     is ClientCreateResult.Error -> applicationContext.sendNotification(
-                        "Telegram Spammer",
-                        "Parsing already started",
-                        ERROR_ID
+                        "Account +${account.phoneNumber} is already parsing",
+                        PARSER_ID
                     )
                 }
             }
@@ -47,12 +47,17 @@ class ParserService : Service() {
         return null
     }
 
-    private fun loadUsers(client: Client, settings: Settings, telegram: TelegramClientUtil) =
+    override fun onDestroy() {
+        super.onDestroy()
+        client?.close()
+    }
+
+    private fun loadUsers(client: Client, settings: Settings, telegram: TelegramClientUtil, id:Int) =
         CoroutineScope(Dispatchers.IO).launch {
+            this@ParserService.client = client
             applicationContext.sendNotification(
-                "Telegram Spammer",
                 "Started parsing users. It'll take some time to complete",
-                PARSER_ID
+                id
             )
             val resultList = HashSet<String>()
             val chats = HashSet<TdApi.ChatTypeSupergroup>()
@@ -101,9 +106,8 @@ class ParserService : Service() {
                 applicationContext.apply {
                     copyToClipboard(result)
                     sendNotification(
-                        "Telegram Spammer",
                         "Parsed ${resultList.size} users. List copied to clipboard",
-                        PARSER_ID
+                       id
                     )
                 }
                 client.close()

@@ -36,6 +36,10 @@ class AddAccountFragment : Fragment(), KodeinAware,
         return binding.root
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.closeClient()
+    }
 
     override fun success(user: TdApi.User) {
         viewModel.saveUser(user)

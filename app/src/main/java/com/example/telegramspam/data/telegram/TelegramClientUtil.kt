@@ -5,10 +5,14 @@ import com.example.telegramspam.API_ID
 import com.example.telegramspam.SOCKS5
 import com.example.telegramspam.models.ClientCreateResult
 import com.example.telegramspam.models.Settings
+import com.example.telegramspam.utils.getRandom
 import com.example.telegramspam.utils.log
+import com.example.telegramspam.utils.removeEmpty
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
+import java.util.*
+import kotlin.collections.ArrayList
 
 class TelegramClientUtil {
 
@@ -21,16 +25,16 @@ class TelegramClientUtil {
                         when (state.authorizationState.constructor) {
                             TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR -> {
                                 val params = generateParams(account.databasePath)
-                                client?.send(TdApi.SetTdlibParameters(params)){
-                                    if(it is TdApi.Error){
-                                        continuation.resume(ClientCreateResult.Error(it.message)){}
+                                client?.send(TdApi.SetTdlibParameters(params)) {
+                                    if (it is TdApi.Error) {
+                                        continuation.resume(ClientCreateResult.Error(it.message)) {}
                                     }
                                 }
                             }
                             TdApi.AuthorizationStateWaitEncryptionKey.CONSTRUCTOR -> {
-                                client?.send(TdApi.CheckDatabaseEncryptionKey()){
-                                    if(it is TdApi.Error){
-                                        continuation.resume(ClientCreateResult.Error(it.message)){}
+                                client?.send(TdApi.CheckDatabaseEncryptionKey()) {
+                                    if (it is TdApi.Error) {
+                                        continuation.resume(ClientCreateResult.Error(it.message)) {}
                                     }
                                 }
                             }
@@ -152,11 +156,23 @@ class TelegramClientUtil {
         }
     }
 
-    fun sendMessage(client: Client, photos: List<String>, text: String, chatId: Long) {
-        val caption = TdApi.FormattedText(text, null)
+    fun blockUser(client: Client, userId: Int) {
+        client.send(TdApi.BlockUser(userId), null)
+    }
+
+    suspend fun sendMessage(
+        client: Client,
+        settings: Settings,
+       user:TdApi.User
+    ) = suspendCancellableCoroutine<Unit> { continuation ->
+        val userId = user.id.toLong()
+        val photos = settings.files.split(",").removeEmpty()
+        val message = getRandomMessage(settings.message)
+        val caption = TdApi.FormattedText(message, null)
+
         if (photos.isEmpty()) {
             val content = TdApi.InputMessageText(caption, false, false)
-            client.send(TdApi.SendMessage(chatId, 0, null, null, content)) {}
+            client.send(TdApi.SendMessage(userId, 0, null, null, content)) {}
         } else {
             val contentList = ArrayList<TdApi.InputMessageContent>()
             photos.forEach { path ->
@@ -168,13 +184,26 @@ class TelegramClientUtil {
             }
             client.send(
                 TdApi.SendMessageAlbum(
-                    chatId,
+                    userId,
                     0,
                     null,
                     contentList.toArray() as Array<out TdApi.InputMessageContent>
                 )
-            ) {}
+            ) {
+                continuation.resume(Unit) {}
+            }
         }
+    }
+
+
+    private fun getRandomMessage(message: String):String {
+        var result = message
+        val pattern = Regex("<\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?>")
+        pattern.findAll(message).forEach { resultMatch ->
+            val words = resultMatch.value.split("[|<>]".toRegex()).removeEmpty()
+            result = result.replace(resultMatch.value, words.getRandom())
+        }
+        return result
     }
 
     suspend fun getChat(client: Client, link: String): TdApi.ChatTypeSupergroup {

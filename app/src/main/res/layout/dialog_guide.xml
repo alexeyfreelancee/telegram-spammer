@@ -31,7 +31,7 @@
           android:layout_height="wrap_content"/>
 
       <TextView
-          android:text="Добавить имя получателя: @name \n\nРандомизация текста: \n{Здравствуйте|Привет} @name \n\nКак итог, при спаме будет использовано два шаблона сообщений \n&quot;Здравствуйте @name&quot; и &quot;Привет @name&quot;"
+          android:text="Добавить имя получателя: @name \n\nРандомизация текста(максимум 10 вариантов слова): \n&quot;&lt;Здравствуйте|Привет&gt; @name&quot; \n\nКак итог, при спаме будет использовано два шаблона сообщений \n&quot;Здравствуйте @name&quot; и &quot;Привет @name&quot; \n"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"/>
 

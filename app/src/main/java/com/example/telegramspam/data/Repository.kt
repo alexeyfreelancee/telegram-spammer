@@ -11,6 +11,7 @@ import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.Settings
 import com.example.telegramspam.data.telegram.AuthorizationListener
 import com.example.telegramspam.data.telegram.TelegramClientUtil
+import com.example.telegramspam.utils.generateRandomInt
 import com.example.telegramspam.utils.getPath
 import com.example.telegramspam.utils.log
 import kotlinx.coroutines.*
@@ -20,10 +21,12 @@ import java.util.concurrent.ThreadLocalRandom
 
 class Repository(
     private val db: AppDatabase,
-    private val authUtil: TelegramAuthUtil,
-    private val telegram: TelegramClientUtil
+    private val authUtil: TelegramAuthUtil
 ) {
 
+    fun closeClient(){
+        authUtil.closeClient()
+    }
     fun removeFile(position: Int, settings: Settings?): String {
         return if (settings != null) {
             val files = ArrayList<String>()
@@ -128,8 +131,7 @@ class Repository(
     }
 
     fun createDatabasePath(): String {
-        val id = ThreadLocalRandom.current().nextInt(Int.MIN_VALUE, Int.MAX_VALUE - 1)
-        return "${Environment.getExternalStorageDirectory()}/telegram-spammer/user$id"
+        return "${Environment.getExternalStorageDirectory()}/telegram-spammer/account${generateRandomInt()}"
     }
 
     suspend fun checkNotExists(phoneNumber: String): Boolean {

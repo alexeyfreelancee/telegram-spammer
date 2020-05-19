@@ -47,6 +47,9 @@ class AddAccountViewModel(
     }
 
 
+    fun closeClient(){
+        repository.closeClient()
+    }
 
     fun sendCode() = viewModelScope.launch {
         if (checkFields(false)) {
