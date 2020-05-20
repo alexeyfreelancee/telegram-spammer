@@ -41,3 +41,11 @@ fun Context.sendNotification(message:String, id: Int) {
         .build()
     notificationManager.notify(id, notification)
 }
+
+fun Context.createNotification(message:String) = NotificationCompat.Builder(this, CHANNEL_ID)
+    .setSmallIcon(R.drawable.ic_app)
+    .setContentTitle("Telegram Spammer")
+    .setContentText(message)
+    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+    .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+    .build()

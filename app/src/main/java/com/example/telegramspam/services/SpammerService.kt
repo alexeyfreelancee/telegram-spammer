@@ -9,10 +9,7 @@ import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.ClientCreateResult
 import com.example.telegramspam.models.Settings
-import com.example.telegramspam.utils.SPAMMER_ID
-import com.example.telegramspam.utils.generateRandomInt
-import com.example.telegramspam.utils.log
-import com.example.telegramspam.utils.sendNotification
+import com.example.telegramspam.utils.*
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,9 +31,10 @@ class SpammerService : Service() {
                     Gson().fromJson(intent.getStringExtra(SETTINGS), Settings::class.java)
                 val account = Gson().fromJson(intent.getStringExtra(ACCOUNT), Account::class.java)
                 val telegram = TelegramClientUtil()
+                val notificationId = generateRandomInt()
                 when (val result = telegram.createClient(account)) {
                     is ClientCreateResult.Success -> {
-                        startSpam(settings, result.client, telegram, generateRandomInt())
+                        startSpam(settings, result.client, telegram, notificationId)
                     }
                     is ClientCreateResult.Error -> {
                         applicationContext.sendNotification(
@@ -60,13 +58,11 @@ class SpammerService : Service() {
         settings: Settings,
         client: Client,
         telegram: TelegramClientUtil,
-        id: Int
+        notificationId: Int
     ) = CoroutineScope(Dispatchers.IO).launch {
         this@SpammerService.client = client
-        applicationContext.sendNotification(
-            "Started parsing users...",
-            id
-        )
+        startForeground(notificationId, createNotification("Parsing users before spam..."))
+
         val usersChecked = HashSet<TdApi.User>()
         val chats = HashSet<TdApi.ChatTypeSupergroup>()
 
@@ -102,20 +98,15 @@ class SpammerService : Service() {
             }
         }
         log("users that passed settings test ${usersChecked.size}")
-
-        applicationContext.sendNotification(
-            "Parsed ${usersChecked.size} users",
-            id
-        )
         var successCounter = 0
         var errorsCounter = 0
         for ((i, user) in usersChecked.withIndex()) {
             val success = telegram.prepareMessage(client, settings, user)
             if (success) {
                 successCounter++
-                applicationContext.sendNotification(
+                sendNotification(
                     "Sent ${i + 1}/${usersChecked.size} messages",
-                    id
+                    notificationId
                 )
                 if (settings.block) {
                     telegram.blockUser(client, user.id)
@@ -127,9 +118,9 @@ class SpammerService : Service() {
             }
         }
 
-        applicationContext.sendNotification(
-            "Spam finished. Success $successCounter Errors $errorsCounter",
-            id
+        sendNotification(
+            "Spam finished. Success $successCounter, Errors $errorsCounter",
+            notificationId + 1
         )
         client.close()
         stopSelf()

@@ -74,6 +74,7 @@ class CurrentAccountFragment : Fragment(), KodeinAware{
         val account = Gson().toJson(data[ACCOUNT] as Account)
         intent.putExtra(SETTINGS, settings)
         intent.putExtra(ACCOUNT, account)
+
         requireActivity().startService(intent)
     }
 

@@ -32,7 +32,7 @@ class ParserService : Service() {
 
                 when (val result = telegram.createClient(account)) {
                     is ClientCreateResult.Success -> loadUsers(result.client, settings, telegram, generateRandomInt())
-                    is ClientCreateResult.Error -> applicationContext.sendNotification(
+                    is ClientCreateResult.Error -> sendNotification(
                         "Account +${account.phoneNumber} is already parsing",
                         PARSER_ID
                     )
@@ -52,13 +52,10 @@ class ParserService : Service() {
         client?.close()
     }
 
-    private fun loadUsers(client: Client, settings: Settings, telegram: TelegramClientUtil, id:Int) =
+    private fun loadUsers(client: Client, settings: Settings, telegram: TelegramClientUtil, notificationId:Int) =
         CoroutineScope(Dispatchers.IO).launch {
             this@ParserService.client = client
-            applicationContext.sendNotification(
-                "Started parsing users. It'll take some time to complete",
-                id
-            )
+            startForeground(notificationId, createNotification("Started parsing users. It'll take some time to complete"))
             val resultList = HashSet<String>()
             val chats = HashSet<TdApi.ChatTypeSupergroup>()
 
@@ -102,13 +99,8 @@ class ParserService : Service() {
 
             withContext(Dispatchers.Main) {
                 val result = usersString.toString().dropLast(1)
-                applicationContext.apply {
-                    copyToClipboard(result)
-                    sendNotification(
-                        "Parsed ${resultList.size} users. List copied to clipboard",
-                       id
-                    )
-                }
+                copyToClipboard(result)
+                sendNotification("Parsed ${resultList.size} users. List copied to clipboard", notificationId + 1)
                 client.close()
                 stopSelf()
             }
