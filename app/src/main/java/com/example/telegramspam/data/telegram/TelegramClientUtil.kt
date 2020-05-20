@@ -3,8 +3,7 @@ package com.example.telegramspam.data.telegram
 import com.example.telegramspam.API_HASH
 import com.example.telegramspam.API_ID
 import com.example.telegramspam.SOCKS5
-import com.example.telegramspam.models.ClientCreateResult
-import com.example.telegramspam.models.Settings
+import com.example.telegramspam.models.*
 import com.example.telegramspam.utils.getRandom
 import com.example.telegramspam.utils.log
 import com.example.telegramspam.utils.removeEmpty
@@ -80,8 +79,10 @@ class TelegramClientUtil {
                 proxyPort,
                 true,
                 type
-            ), null
-        )
+            )
+        ){
+          //  log(it)
+        }
 
     }
 
@@ -129,12 +130,12 @@ class TelegramClientUtil {
     }
 
     suspend fun getChatMembers(
-        client: Client,
+        client: Client?,
         chat: TdApi.ChatTypeSupergroup,
         offset: Int
-    ): TdApi.ChatMembers {
+    ): GetChatMembersResult{
         return suspendCancellableCoroutine { continuation ->
-            client.send(
+            client?.send(
                 TdApi.GetSupergroupMembers(
                     chat.supergroupId,
                     null,
@@ -143,17 +144,17 @@ class TelegramClientUtil {
                 )
             ) { members ->
                 if (members is TdApi.ChatMembers) {
-                    continuation.resume(members) {}
+                    continuation.resume(GetChatMembersResult.Success(members)) {}
                 } else {
-                    client.close()
+                    continuation.resume(GetChatMembersResult.Error()) {}
                     log(members)
                 }
             }
         }
     }
 
-    fun blockUser(client: Client, userId: Int) {
-        client.send(TdApi.BlockUser(userId)){
+    fun blockUser(client: Client?, userId: Int) {
+        client?.send(TdApi.BlockUser(userId)){
             if(it is TdApi.Error){
                 log(it)
             }
@@ -161,28 +162,31 @@ class TelegramClientUtil {
     }
 
     suspend fun prepareMessage(
-        client: Client,
+        client: Client?,
         settings: Settings,
         user: TdApi.User
     ) = suspendCancellableCoroutine<Boolean> { continuation ->
-        val photos = settings.files.split(",").removeEmpty()
-        val name = "${user.firstName} ${user.lastName}".trim()
-        val message = getRandomMessage(settings.message, name)
-        val caption = TdApi.FormattedText(message, null)
+        if(client!=null){
+            val photos = settings.files.split(",").removeEmpty()
+            val name = "${user.firstName} ${user.lastName}".trim()
+            val message = getRandomMessage(settings.message, name)
+            val caption = TdApi.FormattedText(message, null)
 
-        if (photos.isEmpty()) {
-            val content = TdApi.InputMessageText(caption, false, false)
-            val function =TdApi.SendMessage(user.id.toLong(), 0, null, null, content)
-            sendMessage(client,continuation,function,user.id)
-        } else {
-            val function = TdApi.SendMessageAlbum(
-                user.id.toLong(),
-                0,
-                null,
-                createPhotos(caption,photos)
-            )
-            sendMessage(client, continuation, function, user.id)
+            if (photos.isEmpty()) {
+                val content = TdApi.InputMessageText(caption, false, false)
+                val function =TdApi.SendMessage(user.id.toLong(), 0, null, null, content)
+                sendMessage(client,continuation,function,user.id)
+            } else {
+                val function = TdApi.SendMessageAlbum(
+                    user.id.toLong(),
+                    0,
+                    null,
+                    createPhotos(caption,photos)
+                )
+                sendMessage(client, continuation, function, user.id)
+            }
         }
+
     }
 
     private fun createPhotos(caption: TdApi.FormattedText, photos: List<String>) : Array<TdApi.InputMessageContent>{
@@ -240,17 +244,17 @@ class TelegramClientUtil {
         return result
     }
 
-    suspend fun getChat(client: Client, link: String): TdApi.ChatTypeSupergroup {
+    suspend fun getChat(client: Client?, link: String): GetChatResult {
         return suspendCancellableCoroutine { continuation ->
-            client.send(TdApi.SearchPublicChat(link)) { chat ->
+            client?.send(TdApi.SearchPublicChat(link)) { chat ->
                 if (chat is TdApi.Chat && chat.type is TdApi.ChatTypeSupergroup) {
                     val type = chat.type
                     if (type is TdApi.ChatTypeSupergroup) {
-                        continuation.resume(type) {}
-                    } else {
-                        client.close()
-                        log(type)
+                        continuation.resume(GetChatResult.Success(type)) {}
                     }
+                } else {
+                    continuation.resume(GetChatResult.Error()) {}
+                    log(chat)
                 }
             }
         }
@@ -262,7 +266,7 @@ class TelegramClientUtil {
                 if (fullInfo is TdApi.UserFullInfo) {
                     continuation.resume(fullInfo) {}
                 } else {
-                    client.close()
+
                     log(fullInfo)
                 }
             }
@@ -270,13 +274,13 @@ class TelegramClientUtil {
     }
 
 
-    suspend fun getUser(client: Client, userId: Int): TdApi.User {
+    suspend fun getUser(client: Client?, userId: Int): GetUserResult {
         return suspendCancellableCoroutine { continuation ->
-            client.send(TdApi.GetUser(userId)) { user ->
+            client?.send(TdApi.GetUser(userId)) { user ->
                 if (user is TdApi.User) {
-                    continuation.resume(user) {}
+                    continuation.resume(GetUserResult.Success(user)) {}
                 } else {
-                    client.close()
+                    continuation.resume(GetUserResult.Error()) {}
                     log(user)
                 }
             }

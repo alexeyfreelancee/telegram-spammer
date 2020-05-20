@@ -62,6 +62,7 @@ class CurrentAccountFragment : Fragment(), KodeinAware{
         })
         viewModel.openProxyDialog.observe(viewLifecycleOwner, Observer {
             if(!it.hasBeenHandled){
+                it.peekContent()
                 val dialog = ProxyDialog(requireActivity(), viewModel)
                 dialog.show()
             }
