@@ -20,14 +20,16 @@ class ParserService : Service() {
     private val clients = HashMap<String, Client>()
     private val STOP_PARSE = "com.example.telegramspam.services.STOP_PARSE"
 
-    private fun generateIntent(phone: String): Intent {
+    private fun generateIntent(phone: String, notificationId: Int): Intent {
         val stopIntent = Intent(this@ParserService, ParserService::class.java)
-        stopIntent.action = "$STOP_PARSE@$phone"
+        stopIntent.action = "$STOP_PARSE@$phone@$notificationId"
         return stopIntent
     }
 
     private fun stop(action: String) {
         val phone = action.split("@")[1]
+        val notificationId = action.split("@")[2].toInt()
+        cancelNotification(notificationId)
         clients[phone]?.close()
     }
 
@@ -81,7 +83,7 @@ class ParserService : Service() {
         notificationId: Int
     ) =
         CoroutineScope(Dispatchers.IO).launch {
-            val stopIntent = generateIntent(phone)
+            val stopIntent = generateIntent(phone, notificationId)
             startForeground(
                 notificationId,
                 createServiceNotification(
@@ -93,6 +95,7 @@ class ParserService : Service() {
             val resultList = HashSet<String>()
             val chats = HashSet<TdApi.ChatTypeSupergroup>()
 
+            log(0)
             settings.chats.split(",").forEach { link ->
                 if (link.length > 3) {
                     when(val result = telegram.getChat(clients[phone], link)){
@@ -103,6 +106,7 @@ class ParserService : Service() {
                 }
             }
 
+            log(1)
             val chatMembers = HashSet<TdApi.ChatMember>()
 
             chats.forEach { chat ->
@@ -130,7 +134,7 @@ class ParserService : Service() {
 
             }
 
-
+            log(2)
             val users = HashSet<TdApi.User>()
             chatMembers.forEach { member ->
                 when(val result = telegram.getUser(clients[phone], member.userId)){

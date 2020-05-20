@@ -14,7 +14,7 @@ import org.drinkless.td.libcore.telegram.TdApi
 
 class TelegramClientUtil {
 
-    suspend fun createClient(account: com.example.telegramspam.models.Account): ClientCreateResult {
+    suspend fun createClient(account: Account): ClientCreateResult {
         return suspendCancellableCoroutine { continuation ->
             var client: Client? = null
             client = Client.create({ state ->
@@ -71,17 +71,11 @@ class TelegramClientUtil {
         val type = if (proxyType == SOCKS5) {
             TdApi.ProxyTypeSocks5(proxyUsername, proxyPass)
         } else {
-            TdApi.ProxyTypeHttp(proxyUsername, proxyPass, false)
+            TdApi.ProxyTypeHttp(proxyUsername, proxyPass, true)
         }
-        this.send(
-            TdApi.AddProxy(
-                proxyIp,
-                proxyPort,
-                true,
-                type
-            )
-        ){
-          //  log(it)
+        val function =  TdApi.AddProxy(proxyIp, proxyPort, true, type)
+        this.send(function){
+            log(it)
         }
 
     }
