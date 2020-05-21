@@ -26,7 +26,7 @@ class App : Application(), KodeinAware {
         }
         bind() from eagerSingleton { TelegramClientUtil() }
         bind() from eagerSingleton { TelegramAuthUtil(instance()) }
-        bind() from eagerSingleton { Repository(instance(), instance()) }
+        bind() from eagerSingleton { Repository(instance(), instance(), instance()) }
 
         bind() from singleton { AccountsViewModelFactory(instance()) }
         bind() from singleton { AddAccountViewModelFactory(instance()) }

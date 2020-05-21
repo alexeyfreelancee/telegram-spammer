@@ -6,4 +6,5 @@ interface AuthorizationListener {
     fun success(user: TdApi.User)
     fun codeSend()
     fun error(msg:String)
+    fun proxyAdded(proxyId:Int?)
 }

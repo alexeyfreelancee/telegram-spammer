@@ -22,7 +22,7 @@ fun createNotificationChannels(context: Context) {
         val channel1 = NotificationChannel(
             "Telegram spammer channel",
             "Telegram spammer channel",
-            NotificationManager.IMPORTANCE_HIGH
+            NotificationManager.IMPORTANCE_LOW
         )
         channel1.description = "This is Channel 1"
 
@@ -38,7 +38,7 @@ fun Context.sendNotification(phone:String, message:String, id: Int) {
         .setSmallIcon(R.drawable.ic_app)
         .setContentTitle("Account +$phone")
         .setContentText(message)
-        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .setPriority(NotificationCompat.PRIORITY_LOW)
         .setCategory(NotificationCompat.CATEGORY_MESSAGE)
         .build()
     notificationManager.notify(id, notification)
@@ -57,21 +57,21 @@ fun Context.sendNotificationService(phone:String,message:String, id:Int, stopInt
         .setContentTitle("Account +$phone")
         .setContentText(message)
         .addAction(R.drawable.ic_app, "Stop", pStopSelf)
-        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .setPriority(NotificationCompat.PRIORITY_LOW)
         .setCategory(NotificationCompat.CATEGORY_MESSAGE)
         .build()
     notificationManager.notify(id, notification)
 }
 
-fun Context.createServiceNotification(phone:String, message:String, stopIntent: Intent) : Notification {
+fun Context.createServiceNotification( message:String, stopIntent: Intent) : Notification {
     val pStopSelf =
         PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_CANCEL_CURRENT)
     return NotificationCompat.Builder(this, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_app)
-        .setContentTitle("Account +$phone")
+        .setContentTitle("Telegram Spammer")
         .setContentText(message)
-        .addAction(R.drawable.ic_app, "Stop", pStopSelf)
-        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .addAction(R.drawable.ic_app, "Stop all", pStopSelf)
+        .setPriority(NotificationCompat.PRIORITY_LOW)
         .setCategory(NotificationCompat.CATEGORY_MESSAGE)
         .build()
 }

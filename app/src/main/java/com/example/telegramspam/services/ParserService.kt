@@ -18,26 +18,41 @@ import org.drinkless.td.libcore.telegram.TdApi
 
 class ParserService : Service() {
     private val clients = HashMap<String, Client>()
-    private val STOP_PARSE = "com.example.telegramspam.services.STOP_PARSE"
+    private val STOP_CURRENT = "com.example.telegramspam.services.STOP_CURRENT_PARSE"
+    private val STOP_ALL = "com.example.telegramspam.services.STOP_ALL_PARSE"
 
-    private fun generateIntent(phone: String, notificationId: Int): Intent {
+    private fun generateStopCurrent(phone: String, notificationId: Int): Intent {
         val stopIntent = Intent(this@ParserService, ParserService::class.java)
-        stopIntent.action = "$STOP_PARSE@$phone@$notificationId"
+        stopIntent.action = "$STOP_CURRENT@$phone@$notificationId"
+        return stopIntent
+    }
+
+    private fun generateStopAll(): Intent {
+        val stopIntent = Intent(this@ParserService, ParserService::class.java)
+        stopIntent.action =STOP_ALL
         return stopIntent
     }
 
     private fun stop(action: String) {
         val phone = action.split("@")[1]
-        val notificationId = action.split("@")[2].toInt()
-        cancelNotification(notificationId)
         clients[phone]?.close()
     }
 
+    private fun stopAll(){
+        stopSelf()
+        clients.forEach {
+            it.value.close()
+        }
+    }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             val action = intent.action
-            if (action != null && action.startsWith(STOP_PARSE)) {
+            if (action != null && action.startsWith(STOP_CURRENT)) {
+                log("stop current parsing")
                 stop(action)
+            }else if(action!=null && action == STOP_ALL){
+                log("stop all parsing")
+                stopAll()
             } else {
                 CoroutineScope(Dispatchers.IO).launch {
                     val account =
@@ -58,7 +73,7 @@ class ParserService : Service() {
                         }
                         is ClientCreateResult.Error -> sendNotification(
                             account.phoneNumber,
-                            "Already parsing",
+                            "Already spamming or parsing on this account. Restart app to fix it",
                             PARSER_ID
                         )
                     }
@@ -83,30 +98,35 @@ class ParserService : Service() {
         notificationId: Int
     ) =
         CoroutineScope(Dispatchers.IO).launch {
-            val stopIntent = generateIntent(phone, notificationId)
+            val stopCurrent = generateStopCurrent(phone, notificationId)
             startForeground(
-                notificationId,
+                PARSER_ID,
                 createServiceNotification(
-                    phone,
-                    "Started parsing users. It'll take some time to complete",
-                    stopIntent
+                    "Parser is running",
+                    generateStopAll()
                 )
+            )
+
+            sendNotificationService(
+                phone,
+                "Started parsing users. It'll take some time to complete",
+                notificationId, stopCurrent
             )
             val resultList = HashSet<String>()
             val chats = HashSet<TdApi.ChatTypeSupergroup>()
 
-            log(0)
+
             settings.chats.split(",").forEach { link ->
                 if (link.length > 3) {
                     when(val result = telegram.getChat(clients[phone], link)){
-                       is GetChatResult.Success -> chats.add(result.chat)
+                        is GetChatResult.Success -> chats.add(result.chat)
                         is GetChatResult.Error -> log("error parsing chats")
                     }
 
                 }
             }
 
-            log(1)
+
             val chatMembers = HashSet<TdApi.ChatMember>()
 
             chats.forEach { chat ->
@@ -134,7 +154,7 @@ class ParserService : Service() {
 
             }
 
-            log(2)
+
             val users = HashSet<TdApi.User>()
             chatMembers.forEach { member ->
                 when(val result = telegram.getUser(clients[phone], member.userId)){

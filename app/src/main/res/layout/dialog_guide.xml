@@ -36,7 +36,7 @@
           android:layout_height="wrap_content"/>
 
       <TextView
-          android:layout_marginTop="16dp"
+          android:layout_marginTop="8dp"
           android:textSize="18sp"
           android:text="@string/files"
           android:textStyle="bold"
@@ -44,7 +44,7 @@
           android:layout_height="wrap_content"/>
 
       <TextView
-          android:text="Не отправляйте слишком большие фотографии, это может вызывать ошибки. \nМаксимальное количество фотографий 8"
+          android:text="Не отправляйте слишком большие фотографии, это может вызвать ошибки. \nМаксимальное количество фотографий 8"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"/>
 

@@ -20,9 +20,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        Client.execute(TdApi.SetLogVerbosityLevel(0))
         checkStoragePermission()
         createNotificationChannels(applicationContext)
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

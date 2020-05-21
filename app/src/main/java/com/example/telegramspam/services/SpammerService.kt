@@ -19,25 +19,43 @@ import org.drinkless.td.libcore.telegram.TdApi
 class SpammerService : Service() {
     private val clients = HashMap<String, Client>()
     override fun onBind(intent: Intent?): IBinder? = null
-    private val STOP_SPAM = "com.example.telegramspam.services.STOP_SPAM"
+    private val STOP_CURRENT = "com.example.telegramspam.services.STOP_CURRENT_SPAM"
+    private val STOP_ALL = "com.example.telegramspam.services.STOP_ALL_SPAM"
 
-    private fun generateIntent(phone: String): Intent {
+
+    private fun generateStopCurrent(phone: String): Intent {
         val stopIntent = Intent(this@SpammerService, SpammerService::class.java)
-        stopIntent.action = "$STOP_SPAM@$phone"
+        stopIntent.action = "$STOP_CURRENT@$phone"
         return stopIntent
     }
 
-    private fun stop(action: String) {
+    private fun generateStopAll(): Intent {
+        val stopIntent = Intent(this@SpammerService, SpammerService::class.java)
+        stopIntent.action = STOP_ALL
+        return stopIntent
+    }
+
+    private fun stopCurrent(action: String) {
         val phone = action.split("@")[1]
         clients[phone]?.close()
     }
 
+    private fun stopAll() {
+        stopSelf()
+        clients.forEach {
+            it.value.close()
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        log("spammer service started")
         if (intent != null) {
             val action = intent.action
-            if (action != null && action.startsWith(STOP_SPAM)) {
-                stop(action)
+            if (action != null && action.startsWith(STOP_CURRENT)) {
+                log("stop spamming")
+                stopCurrent(action)
+            } else if (action != null && action == STOP_ALL) {
+                log("stop all")
+                stopAll()
             } else {
                 CoroutineScope(Dispatchers.IO).launch {
                     val settings =
@@ -53,7 +71,7 @@ class SpammerService : Service() {
                         is ClientCreateResult.Error -> {
                             sendNotification(
                                 account.phoneNumber,
-                                "Already spamming",
+                                "Already spamming or parsing on this account. Restart app to fix it",
                                 SPAMMER_ID
                             )
                         }
@@ -74,11 +92,11 @@ class SpammerService : Service() {
         notificationId: Int
     ) = CoroutineScope(Dispatchers.IO).launch {
         log(notificationId)
-        val stopIntent = generateIntent(phone)
+        val stopCurrentIntent = generateStopCurrent(phone)
 
         startForeground(
-            notificationId,
-            createServiceNotification(phone, "Parsing users before spam...", stopIntent)
+            SPAMMER_ID,
+            createServiceNotification("Spammer is running", generateStopAll())
         )
 
         val usersChecked = HashSet<TdApi.User>()
@@ -118,8 +136,8 @@ class SpammerService : Service() {
 
         val usersNotChecked = HashSet<TdApi.User>()
         chatMembers.forEach { member ->
-            when(val result = telegram.getUser(clients[phone], member.userId)){
-                is GetUserResult.Success ->{
+            when (val result = telegram.getUser(clients[phone], member.userId)) {
+                is GetUserResult.Success -> {
                     usersNotChecked.add(result.user)
                 }
             }
@@ -143,7 +161,7 @@ class SpammerService : Service() {
                 sendNotificationService(
                     phone,
                     "Sent ${i + 1}/${usersChecked.size} messages",
-                    notificationId, stopIntent
+                    notificationId, stopCurrentIntent
                 )
                 if (settings.block) {
                     telegram.blockUser(clients[phone], user.id)

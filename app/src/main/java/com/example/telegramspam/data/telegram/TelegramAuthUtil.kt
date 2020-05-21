@@ -1,6 +1,5 @@
 package com.example.telegramspam.data.telegram
 
-import com.example.telegramspam.data.database.AppDatabase
 import com.example.telegramspam.utils.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,13 +15,36 @@ class TelegramAuthUtil(
 
     fun finishAuthentication(
         smsCode: String,
+        proxyIp: String? = null,
+        proxyPort: Int? = null,
+        proxyUsername: String = "",
+        proxyPassword: String = "",
+        proxyType: String = "",
         listener: AuthorizationListener
     ) {
-        client?.send(TdApi.CheckAuthenticationCode(smsCode)) {
-            if (it is TdApi.Error) {
-                listener.error(it.message)
+        CoroutineScope(Dispatchers.IO).launch {
+            val noProxy = proxyIp.isNullOrEmpty() || proxyPort == null || proxyPort == 0
+            if (!noProxy) {
+                log("added proxy")
+                val proxyId = telegram.addProxy(
+                    client,
+                    proxyIp!!,
+                    proxyPort!!,
+                    proxyUsername,
+                    proxyPassword,
+                    proxyType
+                )
+                listener.proxyAdded(proxyId)
+            } else{
+                log("no proxy")
+            }
+            client?.send(TdApi.CheckAuthenticationCode(smsCode)) {
+                if (it is TdApi.Error) {
+                    listener.error(it.message)
+                }
             }
         }
+
     }
 
     fun enterPhoneNumber(phoneNumber: String, listener: AuthorizationListener) {
@@ -36,7 +58,7 @@ class TelegramAuthUtil(
         }
     }
 
-    fun closeClient(){
+    fun closeClient() {
         client?.close()
     }
 
@@ -54,13 +76,13 @@ class TelegramAuthUtil(
                 is TdApi.UpdateAuthorizationState -> {
                     when (state.authorizationState.constructor) {
                         TdApi.AuthorizationStateReady.CONSTRUCTOR -> {
-                            log("success auth")
                             client?.send(TdApi.GetMe()) { user ->
-
-                                listener.success(user as TdApi.User)
+                                if(user is TdApi.User){
+                                    listener.success(user)
+                                    client?.close()
+                                }
 
                             }
-
                         }
                         TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR -> {
                             log("waiting params")

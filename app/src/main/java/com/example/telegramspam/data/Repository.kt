@@ -5,29 +5,33 @@ import android.content.Intent
 import android.os.Environment
 import androidx.lifecycle.LiveData
 import com.example.telegramspam.data.database.AppDatabase
-import com.example.telegramspam.data.telegram.TelegramAuthUtil
-
-import com.example.telegramspam.models.Account
-import com.example.telegramspam.models.Settings
 import com.example.telegramspam.data.telegram.AuthorizationListener
+import com.example.telegramspam.data.telegram.TelegramAuthUtil
 import com.example.telegramspam.data.telegram.TelegramClientUtil
+import com.example.telegramspam.models.Account
+import com.example.telegramspam.models.ClientCreateResult
+import com.example.telegramspam.models.Settings
 import com.example.telegramspam.utils.generateRandomInt
 import com.example.telegramspam.utils.getPath
 import com.example.telegramspam.utils.log
 import com.example.telegramspam.utils.removeEmpty
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.drinkless.td.libcore.telegram.TdApi
-import java.util.concurrent.ThreadLocalRandom
 
 
 class Repository(
     private val db: AppDatabase,
-    private val authUtil: TelegramAuthUtil
+    private val authUtil: TelegramAuthUtil,
+    private val telegram: TelegramClientUtil
 ) {
 
-    fun closeClient(){
+    fun closeClient() {
         authUtil.closeClient()
     }
+
     fun removeFile(position: Int, settings: Settings?): String {
         return if (settings != null) {
             val files = ArrayList<String>()
@@ -96,11 +100,12 @@ class Repository(
         }
     }
 
-    suspend fun loadAccount(databasePath: String) :Account{
+    suspend fun loadAccount(databasePath: String): Account {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             db.accountsDao().loadByPath(databasePath)
         }
     }
+
     suspend fun loadAccount(accountId: Int): Account {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             db.accountsDao().loadById(accountId)
@@ -118,15 +123,40 @@ class Repository(
         databasePath: String
     ) {
         CoroutineScope(Dispatchers.IO).launch {
-            val account = db.accountsDao().loadByPath(databasePath).apply {
-                this.proxyIp = proxyIp
-                this.proxyPort = proxyPort
-                this.proxyUsername = username
-                this.proxyPassword = pass
-                this.proxyType = proxyType
+            val account = db.accountsDao().loadByPath(databasePath)
+            val sameProxy =
+                account.proxyIp == proxyIp && account.proxyPort == proxyPort && account.proxyUsername == username && account.proxyPassword == pass && account.proxyType == proxyType
+            val noProxy = proxyIp.isEmpty() || proxyPort == 0
+            if(!sameProxy){
+                account.apply {
+                    this.proxyIp = proxyIp
+                    this.proxyPort = proxyPort
+                    this.proxyUsername = username
+                    this.proxyPassword = pass
+                    this.proxyType = proxyType
+                }
+
+
+                val client = telegram.createClient(account)
+                if (client is ClientCreateResult.Success) {
+                    telegram.disableProxy(client.client)
+
+                    if (!noProxy) {
+                        val proxyId = telegram.addProxy(client.client, account)
+                        if (proxyId != null) {
+                            account.proxyId = proxyId
+                        }
+                        log("updated proxy $proxyIp:$proxyPort  type = $proxyType")
+                    } else {
+                        log("removed proxy ${account.proxyId}")
+                    }
+                    client.client.close()
+                    db.accountsDao().insert(account)
+                }
+            } else{
+                log("tried to add same proxy")
             }
-            log("updated proxy $proxyIp:$proxyPort  type = $proxyType")
-            db.accountsDao().insert(account)
+
         }
     }
 
@@ -148,9 +178,22 @@ class Repository(
 
     fun finishAuthentication(
         smsCode: String,
+        proxyIp: String? = null,
+        proxyPort: Int? = null,
+        proxyUsername: String = "",
+        proxyPassword: String = "",
+        proxyType: String = "",
         listener: AuthorizationListener
     ) {
-        authUtil.finishAuthentication(smsCode, listener)
+        authUtil.finishAuthentication(
+            smsCode,
+            proxyIp,
+            proxyPort,
+            proxyUsername,
+            proxyPassword,
+            proxyType,
+            listener
+        )
     }
 
     fun startAuthentication(
@@ -169,6 +212,7 @@ class Repository(
 
     fun saveAccount(
         user: TdApi.User,
+        proxyId: Int = 0,
         proxyIp: String? = null,
         proxyPort: Int? = null,
         proxyUsername: String = "",
@@ -176,18 +220,26 @@ class Repository(
         proxyType: String = "",
         databasePath: String
     ) {
-        val account = if (proxyIp.isNullOrEmpty() && proxyPort == null) {
+
+        val noProxy =
+            proxyIp.isNullOrEmpty() || (proxyPort == null || proxyPort == 0) && proxyId == 0
+
+        val account = if (noProxy) {
+            log("no proxy")
             Account(
                 id = user.id,
                 username = user.username,
                 phoneNumber = user.phoneNumber,
                 databasePath = databasePath
             )
+
         } else {
+            log("have proxy")
             Account(
                 id = user.id,
                 username = user.username,
                 phoneNumber = user.phoneNumber,
+                proxyId = proxyId,
                 proxyIp = proxyIp!!,
                 proxyPort = proxyPort!!,
                 proxyType = proxyType,
@@ -196,9 +248,12 @@ class Repository(
                 databasePath = databasePath
             )
         }
+
+
         CoroutineScope(Dispatchers.IO).launch {
-            log("account saved", account)
+
             db.accountsDao().insert(account)
+
         }
     }
 }

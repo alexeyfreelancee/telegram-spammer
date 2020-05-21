@@ -5,11 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
 import com.example.telegramspam.R
 import com.example.telegramspam.databinding.AddAccountFragmentBinding
 import com.example.telegramspam.data.telegram.AuthorizationListener
+import com.example.telegramspam.utils.log
 import com.example.telegramspam.utils.toast
 import org.drinkless.td.libcore.telegram.TdApi
 import org.kodein.di.KodeinAware
@@ -32,13 +34,13 @@ class AddAccountFragment : Fragment(), KodeinAware,
             viewmodel = viewModel
             lifecycleOwner = viewLifecycleOwner
         }
+        viewModel.toast.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                toast(it.peekContent())
+            }
+        })
         viewModel.startAuth(this)
         return binding.root
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        viewModel.closeClient()
     }
 
     override fun success(user: TdApi.User) {
@@ -48,6 +50,10 @@ class AddAccountFragment : Fragment(), KodeinAware,
         toast("Аккаунт добален")
     }
 
+    override fun proxyAdded(proxyId: Int?) {
+
+        viewModel.proxyAdded(proxyId)
+    }
     override fun codeSend() {
         toast("Код отправлен")
     }

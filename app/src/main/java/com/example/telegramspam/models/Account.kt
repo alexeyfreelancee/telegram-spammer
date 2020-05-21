@@ -14,5 +14,6 @@ data class Account(
     var proxyUsername:String = "",
     var proxyPassword:String = "",
     var proxyType:String ="",
-    var databasePath:String = ""
+    var databasePath:String = "",
+    var proxyId: Int = 0
 )

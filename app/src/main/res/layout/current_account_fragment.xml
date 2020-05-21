@@ -38,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
-                android:visibility="@{viewmodel.account.proxyPort == 0 ? View.GONE : View.VISIBLE}"
+                android:visibility="@{viewmodel.account.proxyPort == 0 || viewmodel.account.proxyIp.empty ? View.GONE : View.VISIBLE}"
                 app:proxy="@{viewmodel.account}" />
         </LinearLayout>
 
