@@ -11,7 +11,6 @@ import android.util.Log
 import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 import java.util.*
@@ -46,9 +45,9 @@ fun View.toast(msg: String) {
 
 fun connected(view: View) : Boolean{
     val context = view.context
-    val cm =
+    val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    return cm.activeNetworkInfo != null && cm.activeNetworkInfo.isConnected
+    return connectivityManager.activeNetworkInfo != null && connectivityManager.activeNetworkInfo.isConnected
 }
  fun List<String>.getRandom():String{
     val position =  Random().nextInt(this.size)
@@ -57,13 +56,12 @@ fun connected(view: View) : Boolean{
 
 fun generateRandomInt() : Int =  ThreadLocalRandom.current().nextInt(Int.MIN_VALUE, Int.MAX_VALUE - 1)
 
-fun random(min:Int, max: Int) ={
 
-}
 fun Context.copyToClipboard(string: String) {
     val clipboard =
         this.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText("hello world", string))
+    log(string)
 }
 
 fun View.gone(){

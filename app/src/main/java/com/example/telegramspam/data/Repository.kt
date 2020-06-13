@@ -24,13 +24,10 @@ import org.drinkless.td.libcore.telegram.TdApi
 
 class Repository(
     private val db: AppDatabase,
-    private val authUtil: TelegramAuthUtil,
-    private val telegram: TelegramClientUtil
+    private val authUtil: TelegramAuthUtil
 ) {
 
-    fun closeClient() {
-        authUtil.closeClient()
-    }
+
 
     fun removeFile(position: Int, settings: Settings?): String {
         return if (settings != null) {
@@ -137,12 +134,12 @@ class Repository(
                 }
 
 
-                val client = telegram.createClient(account)
-                if (client is ClientCreateResult.Success) {
-                    telegram.disableProxy(client.client)
+                val result = TelegramClientUtil.provideClient(account)
+                if (result is ClientCreateResult.Success) {
+                    TelegramClientUtil.disableProxy(result.client)
 
                     if (!noProxy) {
-                        val proxyId = telegram.addProxy(client.client, account)
+                        val proxyId = TelegramClientUtil.addProxy(result.client, account)
                         if (proxyId != null) {
                             account.proxyId = proxyId
                         }
@@ -150,7 +147,7 @@ class Repository(
                     } else {
                         log("removed proxy ${account.proxyId}")
                     }
-                    client.client.close()
+                    result.client.close()
                     db.accountsDao().insert(account)
                 }
             } else{

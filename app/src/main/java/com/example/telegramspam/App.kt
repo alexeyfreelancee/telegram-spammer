@@ -24,8 +24,8 @@ class App : Application(), KodeinAware {
                 .fallbackToDestructiveMigration()
                 .build()
         }
-        bind() from eagerSingleton { TelegramClientUtil() }
-        bind() from eagerSingleton { TelegramAuthUtil(instance()) }
+
+        bind() from eagerSingleton { TelegramAuthUtil() }
         bind() from eagerSingleton { Repository(instance(), instance(), instance()) }
 
         bind() from singleton { AccountsViewModelFactory(instance()) }

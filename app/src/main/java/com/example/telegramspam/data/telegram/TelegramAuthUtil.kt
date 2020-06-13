@@ -8,7 +8,6 @@ import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 
 class TelegramAuthUtil(
-    private val telegram: TelegramClientUtil
 ) {
     private var client: Client? = null
 
@@ -26,7 +25,7 @@ class TelegramAuthUtil(
             val noProxy = proxyIp.isNullOrEmpty() || proxyPort == null || proxyPort == 0
             if (!noProxy) {
                 log("added proxy")
-                val proxyId = telegram.addProxy(
+                val proxyId = TelegramClientUtil.addProxy(
                     client,
                     proxyIp!!,
                     proxyPort!!,
@@ -86,7 +85,7 @@ class TelegramAuthUtil(
                         }
                         TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR -> {
                             log("waiting params")
-                            val params = telegram.generateParams(dbPath)
+                            val params = TelegramClientUtil.generateParams(dbPath)
                             client?.send(TdApi.SetTdlibParameters(params)) {
                                 if (it is TdApi.Error) {
                                     listener.error(it.message)

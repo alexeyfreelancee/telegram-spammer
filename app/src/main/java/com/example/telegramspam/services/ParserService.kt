@@ -17,7 +17,7 @@ import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 
 class ParserService : Service() {
-    private val clients = HashMap<String, Client>()
+    private val clients = HashSet<String>()
     private val STOP_CURRENT = "com.example.telegramspam.services.STOP_CURRENT_PARSE"
     private val STOP_ALL = "com.example.telegramspam.services.STOP_ALL_PARSE"
 
@@ -35,15 +35,16 @@ class ParserService : Service() {
 
     private fun stop(action: String) {
         val phone = action.split("@")[1]
-        clients[phone]?.close()
+        TelegramClientUtil.stopClient(phone)
     }
 
     private fun stopAll(){
         stopSelf()
         clients.forEach {
-            it.value.close()
+            TelegramClientUtil.stopClient(it)
         }
     }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             val action = intent.action
@@ -59,21 +60,20 @@ class ParserService : Service() {
                         Gson().fromJson(intent.getStringExtra(ACCOUNT), Account::class.java)
                     val settings =
                         Gson().fromJson(intent.getStringExtra(SETTINGS), Settings::class.java)
-                    val telegram = TelegramClientUtil()
 
-                    when (val result = telegram.createClient(account)) {
+
+                    when (val result = TelegramClientUtil.provideClient(account)) {
                         is ClientCreateResult.Success -> {
-                            clients[account.phoneNumber] = result.client
                             startParse(
                                 account.phoneNumber,
                                 settings,
-                                telegram,
-                                generateRandomInt()
+                                generateRandomInt(),
+                                result.client
                             )
                         }
                         is ClientCreateResult.Error -> sendNotification(
                             account.phoneNumber,
-                            "Already spamming or parsing on this account. Restart app to fix it",
+                            "Something went wrong. Try to restart the app",
                             PARSER_ID
                         )
                     }
@@ -94,10 +94,11 @@ class ParserService : Service() {
     private fun startParse(
         phone: String,
         settings: Settings,
-        telegram: TelegramClientUtil,
-        notificationId: Int
-    ) =
-        CoroutineScope(Dispatchers.IO).launch {
+        notificationId: Int,
+        client:Client
+    ) = CoroutineScope(Dispatchers.IO).launch {
+
+            clients.add(phone)
             val stopCurrent = generateStopCurrent(phone, notificationId)
             startForeground(
                 PARSER_ID,
@@ -118,7 +119,7 @@ class ParserService : Service() {
 
             settings.chats.split(",").forEach { link ->
                 if (link.length > 3) {
-                    when(val result = telegram.getChat(clients[phone], link)){
+                    when(val result = TelegramClientUtil.getChat(client, link)){
                         is GetChatResult.Success -> chats.add(result.chat)
                         is GetChatResult.Error -> log("error parsing chats")
                     }
@@ -130,13 +131,13 @@ class ParserService : Service() {
             val chatMembers = HashSet<TdApi.ChatMember>()
 
             chats.forEach { chat ->
-                when(val result =  telegram.getChatMembers(clients[phone], chat, 0)){
+                when(val result =  TelegramClientUtil.getChatMembers(client, chat, 0)){
                     is GetChatMembersResult.Success ->{
                         val members = result.chatMembers
                         var offset = 0
                         val count = members.totalCount / 200
                         for (i in 0..count) {
-                            when(val res = telegram.getChatMembers(clients[phone], chat, offset)){
+                            when(val res = TelegramClientUtil.getChatMembers(client, chat, offset)){
                                 is GetChatMembersResult.Success ->{
                                     res.chatMembers.members.forEach {
                                         chatMembers.add(it)
@@ -157,7 +158,7 @@ class ParserService : Service() {
 
             val users = HashSet<TdApi.User>()
             chatMembers.forEach { member ->
-                when(val result = telegram.getUser(clients[phone], member.userId)){
+                when(val result = TelegramClientUtil.getUser(client, member.userId)){
                     is GetUserResult.Success ->  users.add(result.user)
                     is GetUserResult.Error -> log("error get user")
                 }
@@ -166,7 +167,8 @@ class ParserService : Service() {
 
             log("total users in chats ${users.size}")
             users.forEach { user ->
-                if (telegram.checkUserBySettings(user, settings)) {
+                if (TelegramClientUtil.checkUserBySettings(user, settings)) {
+                    log(user.username)
                     resultList.add(user.username)
                 }
             }
@@ -180,15 +182,16 @@ class ParserService : Service() {
 
             withContext(Dispatchers.Main) {
                 val result = usersString.toString().dropLast(1)
+
                 copyToClipboard(result)
                 sendNotification(
                     phone,
                     "Parsed ${resultList.size} users. List copied to clipboard",
                     notificationId
                 )
-                clients[phone]?.close()
+
             }
 
-
+        TelegramClientUtil.stopClient(phone)
         }
 }

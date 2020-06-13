@@ -11,9 +11,10 @@ import kotlinx.coroutines.*
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 
-class TelegramClientUtil {
+object TelegramClientUtil {
+    private val clients = HashMap<String, Client?>()
 
-    suspend fun createClient(account: Account): ClientCreateResult {
+    private suspend fun createClient(account: Account): ClientCreateResult {
         return suspendCancellableCoroutine { continuation ->
             var client: Client? = null
             client = Client.create({ state ->
@@ -21,7 +22,8 @@ class TelegramClientUtil {
                     is TdApi.UpdateAuthorizationState -> {
                         when (state.authorizationState.constructor) {
                             TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR -> {
-                                val params = generateParams(account.databasePath)
+                                val params =
+                                    generateParams(account.databasePath)
                                 client?.send(TdApi.SetTdlibParameters(params)) {
                                     if (it is TdApi.Error) {
                                         continuation.resume(ClientCreateResult.Error(it.message)) {}
@@ -37,6 +39,7 @@ class TelegramClientUtil {
                             }
                             TdApi.AuthorizationStateReady.CONSTRUCTOR -> {
                                 if (client != null) {
+                                    clients[account.phoneNumber] = client
                                     continuation.resume(ClientCreateResult.Success(client!!)) {}
                                 }
                             }
@@ -49,6 +52,36 @@ class TelegramClientUtil {
         }
     }
 
+    suspend fun provideClient(account: Account): ClientCreateResult {
+        val savedClient = clients[account.phoneNumber]
+        if(savedClient==null){
+            return createClient(account)
+        }else{
+            return suspendCancellableCoroutine { continuation->
+
+                savedClient.send(TdApi.GetMe()){
+                    if(it is TdApi.User){
+                        continuation.resume(ClientCreateResult.Success(savedClient)){}
+                    } else{
+                        continuation.resume(ClientCreateResult.Error("Something went wrong")){}
+                    }
+                }
+
+
+            }
+        }
+
+    }
+
+
+
+    fun stopClient(phoneNumber:String){
+        if(clients[phoneNumber]!=null){
+            clients[phoneNumber]?.close()
+            clients.remove(phoneNumber)
+        }
+
+    }
     suspend fun disableProxy(client: Client?) {
         return suspendCancellableCoroutine { continuation ->
             client?.send(TdApi.DisableProxy()) {

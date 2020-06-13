@@ -17,7 +17,7 @@ import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 
 class SpammerService : Service() {
-    private val clients = HashMap<String, Client>()
+    private val clients = HashSet<String>()
     override fun onBind(intent: Intent?): IBinder? = null
     private val STOP_CURRENT = "com.example.telegramspam.services.STOP_CURRENT_SPAM"
     private val STOP_ALL = "com.example.telegramspam.services.STOP_ALL_SPAM"
@@ -37,13 +37,13 @@ class SpammerService : Service() {
 
     private fun stopCurrent(action: String) {
         val phone = action.split("@")[1]
-        clients[phone]?.close()
+        TelegramClientUtil.stopClient(phone)
     }
 
     private fun stopAll() {
         stopSelf()
         clients.forEach {
-            it.value.close()
+            TelegramClientUtil.stopClient(it)
         }
     }
 
@@ -62,16 +62,15 @@ class SpammerService : Service() {
                         Gson().fromJson(intent.getStringExtra(SETTINGS), Settings::class.java)
                     val account =
                         Gson().fromJson(intent.getStringExtra(ACCOUNT), Account::class.java)
-                    val telegram = TelegramClientUtil()
-                    when (val result = telegram.createClient(account)) {
+
+                    when (val result = TelegramClientUtil.provideClient(account)) {
                         is ClientCreateResult.Success -> {
-                            clients[account.phoneNumber] = result.client
-                            startSpam(account.phoneNumber, settings, telegram, generateRandomInt())
+                            startSpam(result.client,account.phoneNumber, settings, generateRandomInt())
                         }
                         is ClientCreateResult.Error -> {
                             sendNotification(
                                 account.phoneNumber,
-                                "Already spamming or parsing on this account. Restart app to fix it",
+                                "Something went wrong. Try to restart the app",
                                 SPAMMER_ID
                             )
                         }
@@ -86,12 +85,14 @@ class SpammerService : Service() {
 
 
     private fun startSpam(
+        client:Client,
         phone: String,
         settings: Settings,
-        telegram: TelegramClientUtil,
         notificationId: Int
     ) = CoroutineScope(Dispatchers.IO).launch {
-        log(notificationId)
+        clients.add(phone)
+
+
         val stopCurrentIntent = generateStopCurrent(phone)
 
         startForeground(
@@ -104,7 +105,7 @@ class SpammerService : Service() {
 
         settings.chats.split(",").forEach { link ->
             if (link.length > 3) {
-                when (val result = telegram.getChat(clients[phone], link)) {
+                when (val result = TelegramClientUtil.getChat(client, link)) {
                     is GetChatResult.Success -> chats.add(result.chat)
                 }
 
@@ -114,12 +115,12 @@ class SpammerService : Service() {
         val chatMembers = HashSet<TdApi.ChatMember>()
 
         chats.forEach { chat ->
-            when (val result = telegram.getChatMembers(clients[phone], chat, 0)) {
+            when (val result = TelegramClientUtil.getChatMembers(client, chat, 0)) {
                 is GetChatMembersResult.Success -> {
                     var offset = 0
                     val count = result.chatMembers.totalCount / 200
                     for (i in 0..count) {
-                        when (val res = telegram.getChatMembers(clients[phone], chat, offset)) {
+                        when (val res = TelegramClientUtil.getChatMembers(client, chat, offset)) {
                             is GetChatMembersResult.Success -> {
                                 res.chatMembers.members.forEach {
                                     chatMembers.add(it)
@@ -136,7 +137,7 @@ class SpammerService : Service() {
 
         val usersNotChecked = HashSet<TdApi.User>()
         chatMembers.forEach { member ->
-            when (val result = telegram.getUser(clients[phone], member.userId)) {
+            when (val result = TelegramClientUtil.getUser(client, member.userId)) {
                 is GetUserResult.Success -> {
                     usersNotChecked.add(result.user)
                 }
@@ -146,7 +147,7 @@ class SpammerService : Service() {
 
         log("total users in chats ${usersNotChecked.size}")
         usersNotChecked.forEach { user ->
-            if (telegram.checkUserBySettings(user, settings)) {
+            if (TelegramClientUtil.checkUserBySettings(user, settings)) {
                 usersChecked.add(user)
             }
         }
@@ -155,7 +156,7 @@ class SpammerService : Service() {
         var successCounter = 0
         var errorsCounter = 0
         for ((i, user) in usersChecked.withIndex()) {
-            val success = telegram.prepareMessage(clients[phone], settings, user)
+            val success = TelegramClientUtil.prepareMessage(client, settings, user)
             if (success) {
                 successCounter++
                 sendNotificationService(
@@ -164,7 +165,7 @@ class SpammerService : Service() {
                     notificationId, stopCurrentIntent
                 )
                 if (settings.block) {
-                    telegram.blockUser(clients[phone], user.id)
+                    TelegramClientUtil.blockUser(client, user.id)
                 }
                 val delay = settings.delay.toInt() * 1000
                 delay(delay.toLong())
@@ -179,7 +180,7 @@ class SpammerService : Service() {
             notificationId
         )
 
-        clients[phone]?.close()
+        TelegramClientUtil.stopClient(phone)
     }
 
 
