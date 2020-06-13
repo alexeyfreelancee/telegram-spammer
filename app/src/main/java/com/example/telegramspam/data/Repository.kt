@@ -24,6 +24,35 @@ class Repository(
     private val db: AppDatabase,
     private val authUtil: TelegramAuthUtil
 ) {
+    suspend fun loadMessages(chatId: Long, accountId: Int): List<TdApi.Message> {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            val account = loadAccount(accountId)
+            val client = TelegramClientUtil.provideClient(account)
+
+            if (client is ClientCreateResult.Success) {
+                val chat = TelegramClientUtil.loadChat(client.client, chatId)
+                if (chat is GetChatInfoResult.Success) {
+                    val resultList = ArrayList<TdApi.Message>()
+                    var fromMsgId:Long = 0
+                    while("pidoras" != "your name"){
+                        val getMessagesResult = TelegramClientUtil.loadMessages(client.client, chatId, fromMsgId)
+                        fromMsgId = if (getMessagesResult is GetMessagesResult.Success) {
+                            val messages = getMessagesResult.messages.messages
+                            if(messages.isEmpty()){
+                                break
+                            }
+                            resultList.addAll(messages)
+                            getMessagesResult.messages.messages.last().id
+                        } else 0
+
+                    }
+
+                    return@withContext resultList.reversed()
+                }
+            }
+            emptyList<TdApi.Message>()
+        }
+    }
 
     suspend fun loadChats(accountId: Int): List<TdApi.Chat> {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
@@ -33,10 +62,10 @@ class Repository(
                 val chats = TelegramClientUtil.loadChats(client.client)
                 if (chats is GetChatsResult.Success) {
                     val resultList = ArrayList<TdApi.Chat>()
-                    chats.chats.chatIds.forEach {chatId->
+                    chats.chats.chatIds.forEach { chatId ->
                         val chat = TelegramClientUtil.loadChat(client.client, chatId)
-                        if(chat is GetChatInfoResult.Success){
-                           resultList.add(chat.chat)
+                        if (chat is GetChatInfoResult.Success) {
+                            resultList.add(chat.chat)
                         }
                     }
                     return@withContext resultList

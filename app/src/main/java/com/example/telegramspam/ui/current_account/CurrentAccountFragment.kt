@@ -48,7 +48,6 @@ class CurrentAccountFragment : Fragment(), KodeinAware{
     private fun setupViewModel(){
         arguments?.let { args->
             val accountId = args.getInt(ACC_ID, 0)
-            log("accountId $accountId")
             viewModel.setupAccount(accountId)
         }
 

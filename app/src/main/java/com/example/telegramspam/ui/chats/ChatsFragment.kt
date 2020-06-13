@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
+import com.example.telegramspam.ACCOUNT
 import com.example.telegramspam.ACCOUNT_ID
 import com.example.telegramspam.CHAT_ID
 import com.example.telegramspam.R
@@ -48,17 +49,15 @@ class ChatsFragment : Fragment(), KodeinAware {
             if (!it.hasBeenHandled) {
                 navController.navigate(
                     R.id.action_chatFragment_to_currentChatFragment, bundleOf(
-                        CHAT_ID to it.peekContent()
+                        CHAT_ID to it.peekContent(),
+                        ACCOUNT_ID to viewModel.accountId
                     )
                 )
             }
         })
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.loadChats()
-    }
+
 
     private fun setupChatList() {
         adapter = ChatListAdapter(viewModel)

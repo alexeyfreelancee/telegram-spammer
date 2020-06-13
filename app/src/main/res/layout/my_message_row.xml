@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewmodel"
+            type="com.example.telegramspam.ui.current_chat.CurrentChatViewModel" />
+
+        <variable
+            name="message"
+            type="org.drinkless.td.libcore.telegram.TdApi.Message" />
+    </data>
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="8dp">
+
+
+        <RelativeLayout
+            android:id="@+id/message_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/msg_back"
+            android:elevation="8dp"
+            android:ems="10"
+            android:maxWidth="200dp"
+            android:minWidth="80dp"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/msgText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginBottom="8dp"
+                android:autoLink="web"
+                android:focusable="false"
+                android:maxWidth="200dp"
+                android:minWidth="120dp"
+                android:padding="8dp"
+                android:textColor="#000"
+                android:textSize="12sp"
+                tools:text="Сообщение... Сообщение... " />
+
+
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+</layout>

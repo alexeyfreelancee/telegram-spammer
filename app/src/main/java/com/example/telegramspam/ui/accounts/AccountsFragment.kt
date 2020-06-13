@@ -23,7 +23,7 @@ class AccountsFragment : Fragment(), KodeinAware {
     private lateinit var binding: AccountsFragmentBinding
     private lateinit var viewModel: AccountsViewModel
     override val kodein by kodein()
-    private val factory: AccountsViewModelFactory by instance()
+    private val factory  by instance<AccountsViewModelFactory>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

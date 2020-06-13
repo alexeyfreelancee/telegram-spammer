@@ -14,7 +14,7 @@ class ChatViewModel(private val repository: Repository) : ViewModel() {
 
     val openChat = MutableLiveData<Event<Long>>()
     val dataLoading = MutableLiveData<Boolean>()
-    private var accountId = 0
+     var accountId = 0
 
     fun loadChats(){
         viewModelScope.launch {
