@@ -12,7 +12,7 @@ class ChatViewModel(private val repository: Repository) : ViewModel() {
     private val _chats = MutableLiveData<List<TdApi.Chat>>()
     val chats : LiveData<List<TdApi.Chat>> = _chats
 
-    val openChat = MutableLiveData<Event<Int>>()
+    val openChat = MutableLiveData<Event<Long>>()
     val dataLoading = MutableLiveData<Boolean>()
     private var accountId = 0
 
@@ -24,7 +24,7 @@ class ChatViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
-    fun openChat(id:Int){
+    fun openChat(id:Long){
         openChat.value = Event(id)
     }
     fun setupAccount(accountId: Int)  {

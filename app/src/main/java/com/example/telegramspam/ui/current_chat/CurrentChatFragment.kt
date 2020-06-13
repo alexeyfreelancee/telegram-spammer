@@ -10,9 +10,7 @@ import com.example.telegramspam.R
 
 class CurrentChatFragment : Fragment() {
 
-    companion object {
-        fun newInstance() = CurrentChatFragment()
-    }
+
 
     private lateinit var viewModel: CurrentChatViewModel
 
@@ -26,7 +24,7 @@ class CurrentChatFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(CurrentChatViewModel::class.java)
-        // TODO: Use the ViewModel
+
     }
 
 }

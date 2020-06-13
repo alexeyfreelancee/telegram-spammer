@@ -21,10 +21,21 @@ class ChatListAdapter(private val viewModel: ChatViewModel) : RecyclerView.Adapt
 
     inner class ChatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         fun bind(chat:TdApi.Chat){
-            DataBindingUtil.bind<ChatRowBinding>(itemView)?.apply {
+            val binding =DataBindingUtil.bind<ChatRowBinding>(itemView)?.apply {
                 viewmodel = viewModel
                 this.chat = chat
             }
+
+            val message = when(val msg = chat.lastMessage?.content){
+                is TdApi.MessageText-> msg.text.text
+                is TdApi.MessagePhoto -> "Photo"
+                is TdApi.MessageVideo -> "Video"
+                is TdApi.MessageDocument -> "Document"
+                is TdApi.MessageAudio -> "Audio"
+                is TdApi.MessageCall -> "Call"
+                else->  "..."
+            }
+            binding?.lastMsg?.text= message
         }
     }
 
