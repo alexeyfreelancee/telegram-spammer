@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
@@ -50,6 +51,7 @@ class CurrentAccountFragment : Fragment(), KodeinAware{
             log("accountId $accountId")
             viewModel.setupAccount(accountId)
         }
+
         viewModel.startSpam.observe(viewLifecycleOwner, Observer {
             if(!it.hasBeenHandled){
                 startSpammerService(it.peekContent())
@@ -89,6 +91,14 @@ class CurrentAccountFragment : Fragment(), KodeinAware{
                 navController.navigate(R.id.action_currentAccountFragment_to_settingsFragment, bundle)
             }
 
+        })
+
+        viewModel.openChats.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                navController.navigate(R.id.action_currentAccountFragment_to_chatFragment, bundleOf(
+                    ACCOUNT_ID to it.peekContent()
+                ))
+            }
         })
     }
 

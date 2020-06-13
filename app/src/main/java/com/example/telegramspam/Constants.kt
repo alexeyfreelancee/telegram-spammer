@@ -23,5 +23,7 @@ const val ACCOUNT = "ACCOUNT"
 const val SETTINGS = "SETTINGS"
 const val CLIENT = "CLIENT"
 const val NO_INTERNET = "Нет подключения к интернету"
+const val ACCOUNT_ID = "dakjs;flkjas"
+const val CHAT_ID = "chat_id"
 
 

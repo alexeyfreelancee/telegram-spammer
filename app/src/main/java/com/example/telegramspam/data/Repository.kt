@@ -8,9 +8,7 @@ import com.example.telegramspam.data.database.AppDatabase
 import com.example.telegramspam.data.telegram.AuthorizationListener
 import com.example.telegramspam.data.telegram.TelegramAuthUtil
 import com.example.telegramspam.data.telegram.TelegramClientUtil
-import com.example.telegramspam.models.Account
-import com.example.telegramspam.models.ClientCreateResult
-import com.example.telegramspam.models.Settings
+import com.example.telegramspam.models.*
 import com.example.telegramspam.utils.generateRandomInt
 import com.example.telegramspam.utils.getPath
 import com.example.telegramspam.utils.log
@@ -27,7 +25,28 @@ class Repository(
     private val authUtil: TelegramAuthUtil
 ) {
 
+    suspend fun loadChats(accountId: Int): List<TdApi.Chat> {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            val account = loadAccount(accountId)
+            val client = TelegramClientUtil.provideClient(account)
+            if (client is ClientCreateResult.Success) {
+                val chats = TelegramClientUtil.loadChats(client.client)
+                if (chats is GetChatsResult.Success) {
+                    val resultList = ArrayList<TdApi.Chat>()
+                    chats.chats.chatIds.forEach {chatId->
+                        val chat = TelegramClientUtil.loadChat(client.client, chatId)
+                        if(chat is GetChatInfoResult.Success){
+                           resultList.add(chat.chat)
+                        }
+                    }
+                    return@withContext resultList
+                }
+            }
+            emptyList<TdApi.Chat>()
 
+        }
+
+    }
 
     fun removeFile(position: Int, settings: Settings?): String {
         return if (settings != null) {
@@ -124,7 +143,7 @@ class Repository(
             val sameProxy =
                 account.proxyIp == proxyIp && account.proxyPort == proxyPort && account.proxyUsername == username && account.proxyPassword == pass && account.proxyType == proxyType
             val noProxy = proxyIp.isEmpty() || proxyPort == 0
-            if(!sameProxy){
+            if (!sameProxy) {
                 account.apply {
                     this.proxyIp = proxyIp
                     this.proxyPort = proxyPort
@@ -150,7 +169,7 @@ class Repository(
                     result.client.close()
                     db.accountsDao().insert(account)
                 }
-            } else{
+            } else {
                 log("tried to add same proxy")
             }
 

@@ -22,3 +22,13 @@ sealed class GetChatMembersResult {
     class Success(val chatMembers: TdApi.ChatMembers) : GetChatMembersResult()
     class Error(val message:String = "error") : GetChatMembersResult()
 }
+
+sealed class GetChatsResult {
+    class Success(val chats:TdApi.Chats) : GetChatsResult()
+    class Error(val message:String = "error") : GetChatsResult()
+}
+
+sealed class GetChatInfoResult {
+    class Success(val chat:TdApi.Chat) : GetChatInfoResult()
+    class Error(val message:String = "error") : GetChatInfoResult()
+}

@@ -5,9 +5,9 @@ import androidx.room.Room
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.data.database.AppDatabase
 import com.example.telegramspam.data.telegram.TelegramAuthUtil
-import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.ui.accounts.AccountsViewModelFactory
 import com.example.telegramspam.ui.add_account.AddAccountViewModelFactory
+import com.example.telegramspam.ui.chats.ChatsViewModelFactory
 import com.example.telegramspam.ui.current_account.CurrentAccountViewModelFactory
 import com.example.telegramspam.ui.settings.SettingsViewModelFactory
 import org.kodein.di.Kodein
@@ -26,8 +26,8 @@ class App : Application(), KodeinAware {
         }
 
         bind() from eagerSingleton { TelegramAuthUtil() }
-        bind() from eagerSingleton { Repository(instance(), instance(), instance()) }
-
+        bind() from eagerSingleton { Repository(instance(), instance()) }
+        bind() from singleton { ChatsViewModelFactory(instance())}
         bind() from singleton { AccountsViewModelFactory(instance()) }
         bind() from singleton { AddAccountViewModelFactory(instance()) }
         bind() from singleton { CurrentAccountViewModelFactory(instance()) }

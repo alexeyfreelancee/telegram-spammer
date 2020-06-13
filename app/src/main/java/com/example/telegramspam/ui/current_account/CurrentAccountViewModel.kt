@@ -17,6 +17,8 @@ class CurrentAccountViewModel(private val repository: Repository) : ViewModel() 
 
     val openProxyDialog = MutableLiveData<Event<String>>()
     val openSettings = MutableLiveData<Event<String>>()
+    val openChats = MutableLiveData<Event<Int>>()
+
     val startSpam = MutableLiveData<Event<HashMap<String, Any>>>()
     val toast = MutableLiveData<Event<String>>()
     private var accountId = 0
@@ -44,6 +46,10 @@ class CurrentAccountViewModel(private val repository: Repository) : ViewModel() 
         }
     }
 
+    fun openChats() {
+       openChats.value = Event(accountId)
+    }
+
     fun openSettings() {
         account.value?.let {
             openSettings.value =
@@ -52,7 +58,7 @@ class CurrentAccountViewModel(private val repository: Repository) : ViewModel() 
     }
 
     fun startSpam(view: View) {
-        if(connected(view)){
+        if (connected(view)) {
             viewModelScope.launch {
                 account.value?.let {
                     val settings = repository.loadSettings(it.databasePath)
@@ -62,12 +68,12 @@ class CurrentAccountViewModel(private val repository: Repository) : ViewModel() 
                             ACCOUNT to it
                         )
                         startSpam.value = Event(data)
-                    } else{
+                    } else {
                         toast.value = Event("Заполните все поля в настройках")
                     }
                 }
             }
-        }else{
+        } else {
             toast.value = Event(NO_INTERNET)
         }
 

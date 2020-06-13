@@ -47,19 +47,30 @@
             android:id="@+id/button2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:onClick="@{(view)->viewmodel.openProxyDialog()}"
-            android:text="@string/proxy"
+
+            android:onClick="@{(view)->viewmodel.openChats()}"
+            android:text="@string/chats"
             app:layout_constraintBottom_toTopOf="@+id/button4"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent" />
 
         <Button
+            android:id="@+id/button324"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+
+            android:onClick="@{(view)->viewmodel.openProxyDialog()}"
+            android:text="@string/proxy"
+            app:layout_constraintBottom_toTopOf="@+id/button2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
             android:id="@+id/button4"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
+
             android:onClick="@{(view)->viewmodel.openSettings()}"
             android:text="@string/settings"
             app:layout_constraintBottom_toTopOf="@+id/button3"

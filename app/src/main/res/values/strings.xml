@@ -23,6 +23,7 @@
     <string name="block">Блокировать после отправки</string>
     <string name="chat_guide">Вводить через зяпятую, без пробелов \nПример: @chat_name,@chat_name</string>
     <string name="files">Файлы</string>
+
     <array name="last_online">
         <item>Сейчас онлайн</item>
         <item>Пол часа назад</item>

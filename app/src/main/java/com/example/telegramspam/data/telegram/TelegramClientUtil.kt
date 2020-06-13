@@ -14,6 +14,44 @@ import org.drinkless.td.libcore.telegram.TdApi
 object TelegramClientUtil {
     private val clients = HashMap<String, Client?>()
 
+    suspend fun loadChat(client: Client, chatId:Long): GetChatInfoResult{
+        return suspendCancellableCoroutine { continuation->
+            client.send(TdApi.GetChat(chatId)){
+                when (it) {
+                    is TdApi.Chat -> {
+                        continuation.resume(GetChatInfoResult.Success(it)){}
+                    }
+                    is TdApi.Error -> {
+                        log(it.message)
+                        continuation.resume(GetChatInfoResult.Error()){}
+                    }
+                    else -> {
+                        continuation.resume(GetChatInfoResult.Error()){}
+                    }
+                }
+            }
+
+        }
+    }
+    suspend fun loadChats(client: Client): GetChatsResult{
+        return suspendCancellableCoroutine {continuation->
+
+            client.send(TdApi.GetTopChats(TdApi.TopChatCategoryUsers(),250)){
+                when (it) {
+                    is TdApi.Chats -> {
+                        continuation.resume(GetChatsResult.Success(it)){}
+                    }
+                    is TdApi.Error -> {
+                        log(it.message)
+                        continuation.resume(GetChatsResult.Error()){}
+                    }
+                    else -> {
+                        continuation.resume(GetChatsResult.Error()){}
+                    }
+                }
+            }
+        }
+    }
     private suspend fun createClient(account: Account): ClientCreateResult {
         return suspendCancellableCoroutine { continuation ->
             var client: Client? = null
@@ -76,8 +114,8 @@ object TelegramClientUtil {
 
 
     fun stopClient(phoneNumber:String){
-        if(clients[phoneNumber]!=null){
-            clients[phoneNumber]?.close()
+        clients[phoneNumber]?.let {
+            it.close()
             clients.remove(phoneNumber)
         }
 
