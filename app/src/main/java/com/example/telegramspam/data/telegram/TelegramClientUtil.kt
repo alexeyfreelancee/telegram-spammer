@@ -15,34 +15,15 @@ import org.drinkless.td.libcore.telegram.TdApi
 object TelegramClientUtil {
     private val clients = HashMap<String, Client?>()
 
-    suspend fun loadMessagesCount(client: Client, chatId: Long): Int {
-        return suspendCancellableCoroutine { continuation ->
-            client.send(TdApi.GetChatMessageCount(chatId, null, false)) {
-                when(it){
-                    is TdApi.Count -> {
-                        continuation.resume(it.count) {}
-                    }
-                    is TdApi.Error -> {
-                        log(it.message)
-                        continuation.resume(0) {}
-                    }
-                    else -> {
-                        continuation.resume(0) {}
-                    }
-                }
 
-
-            }
-        }
-    }
 
     suspend fun loadMessages(
-        client: Client,
+        client: Client?,
         chatId: Long,
         fromMsgId: Long
     ): GetMessagesResult {
         return suspendCancellableCoroutine { continuation ->
-            client.send(TdApi.GetChatHistory(chatId, fromMsgId,0 , 100, false)) {
+            client?.send(TdApi.GetChatHistory(chatId, fromMsgId,0 , 100, false)) {
                 when (it) {
                     is TdApi.Messages -> continuation.resume(GetMessagesResult.Success(it)) {}
                     is TdApi.Error -> {
@@ -57,9 +38,9 @@ object TelegramClientUtil {
         }
     }
 
-    suspend fun loadChat(client: Client, chatId: Long): GetChatInfoResult {
+    suspend fun loadChat(client: Client?, chatId: Long): GetChatInfoResult {
         return suspendCancellableCoroutine { continuation ->
-            client.send(TdApi.GetChat(chatId)) {
+            client?.send(TdApi.GetChat(chatId)) {
                 when (it) {
                     is TdApi.Chat -> {
                         continuation.resume(GetChatInfoResult.Success(it)) {}
@@ -77,10 +58,10 @@ object TelegramClientUtil {
         }
     }
 
-    suspend fun loadChats(client: Client): GetChatsResult {
+    suspend fun loadChats(client: Client?): GetChatsResult {
         return suspendCancellableCoroutine { continuation ->
 
-            client.send(TdApi.GetTopChats(TdApi.TopChatCategoryUsers(), 250)) {
+            client?.send(TdApi.GetChats(TdApi.ChatListMain(),Long.MAX_VALUE, 0, 250)) {
                 when (it) {
                     is TdApi.Chats -> {
                         continuation.resume(GetChatsResult.Success(it)) {}
@@ -302,29 +283,27 @@ object TelegramClientUtil {
         }
     }
 
-    suspend fun prepareMessage(
+    suspend fun sendMessage(
         client: Client?,
-        settings: Settings,
-        user: TdApi.User
+        photos: List<String>,
+        message:String,
+        chatId:Int
     ) = suspendCancellableCoroutine<Boolean> { continuation ->
         if (client != null) {
-            val photos = settings.files.split(",").removeEmpty()
-            val name = "${user.firstName} ${user.lastName}".trim()
-            val message = getRandomMessage(settings.message, name)
             val caption = TdApi.FormattedText(message, null)
 
             if (photos.isEmpty()) {
                 val content = TdApi.InputMessageText(caption, false, false)
-                val function = TdApi.SendMessage(user.id.toLong(), 0, null, null, content)
-                sendMessage(client, continuation, function, user.id)
+                val function = TdApi.SendMessage(chatId.toLong(), 0, null, null, content)
+                sendMsg(client, continuation, function, chatId)
             } else {
                 val function = TdApi.SendMessageAlbum(
-                    user.id.toLong(),
+                    chatId.toLong(),
                     0,
                     null,
                     createPhotos(caption, photos)
                 )
-                sendMessage(client, continuation, function, user.id)
+                sendMsg(client, continuation, function, chatId)
             }
         }
 
@@ -350,7 +329,7 @@ object TelegramClientUtil {
         return contentList
     }
 
-    private fun sendMessage(
+    private fun sendMsg(
         client: Client,
         continuation: CancellableContinuation<Boolean>,
         function: TdApi.Function,
@@ -382,16 +361,7 @@ object TelegramClientUtil {
         }
     }
 
-    private fun getRandomMessage(message: String, name: String): String {
-        var result = message.replace("@name", name)
-        val pattern =
-            Regex("<\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?>")
-        pattern.findAll(message).forEach { resultMatch ->
-            val words = resultMatch.value.split("[|<>]".toRegex()).removeEmpty()
-            result = result.replace(resultMatch.value, words.getRandom())
-        }
-        return result
-    }
+
 
     suspend fun getChat(client: Client?, link: String): GetChatResult {
         return suspendCancellableCoroutine { continuation ->

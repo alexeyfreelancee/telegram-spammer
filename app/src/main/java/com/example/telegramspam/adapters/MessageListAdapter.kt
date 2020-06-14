@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 
 import com.example.telegramspam.databinding.MyMessageRowBinding
@@ -19,51 +20,25 @@ class MessageListAdapter(private val viewModel: CurrentChatViewModel) :
     private val items = ArrayList<TdApi.Message>()
 
     fun fetchList(newList: List<TdApi.Message>) {
+        val diffCallback = MessageDiffCallback(newList, items)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
         items.clear()
         items.addAll(newList)
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
     }
 
     inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(message: TdApi.Message) {
-            val text = when (val msg = message.content) {
-                is TdApi.MessageText -> msg.text.text
-                is TdApi.MessagePhoto -> "Photo"
-                is TdApi.MessageVideo -> "Video"
-                is TdApi.MessageDocument -> "Document"
-                is TdApi.MessageAudio -> "Audio"
-                is TdApi.MessageCall -> {
-                    if (msg.duration == 0) "Canceled call"
-                    else {
-                        val minutes = msg.duration / 60
-                        val seconds = msg.duration % 60
-                        val secString = if (seconds < 10) "0$seconds" else seconds.toString()
-                        val minString = if (minutes < 10) "0$minutes" else minutes.toString()
-                        "Call $minString:$secString"
-                    }
-                }
-                is TdApi.MessageVoiceNote -> {
-                    val minutes = msg.voiceNote.duration / 60
-                    val seconds = msg.voiceNote.duration % 60
-                    val secString = if (seconds < 10) "0$seconds" else seconds.toString()
-                    val minString = if (minutes < 10) "0$minutes" else minutes.toString()
-                    "Voice note $minString:$secString"
-                }
-                is TdApi.MessageSticker -> "Sticker"
-                else -> "..."
-            }
 
-            if(itemViewType == MY_MSG){
+            if (itemViewType == MY_MSG) {
                 DataBindingUtil.bind<MyMessageRowBinding>(itemView)?.apply {
                     viewmodel = viewModel
                     this.message = message
-                    msgText.text = text
                 }
-            } else{
-               DataBindingUtil.bind<OpponentMessageRowBinding>(itemView)?.apply {
+            } else {
+                DataBindingUtil.bind<OpponentMessageRowBinding>(itemView)?.apply {
                     viewmodel = viewModel
                     this.message = message
-                   msgText.text = text
                 }
             }
         }
@@ -71,18 +46,19 @@ class MessageListAdapter(private val viewModel: CurrentChatViewModel) :
 
     override fun getItemViewType(position: Int): Int {
         val msg = items[position]
-        return if(msg.senderUserId == viewModel.accountId){
+        return if (msg.senderUserId == viewModel.accountId) {
             MY_MSG
         } else {
             OPPONENT_MSG
         }
     }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        val binding = if(viewType == MY_MSG){
+        val binding = if (viewType == MY_MSG) {
             MyMessageRowBinding.inflate(inflater, parent, false)
-        }else {
-            OpponentMessageRowBinding.inflate(inflater,parent,false)
+        } else {
+            OpponentMessageRowBinding.inflate(inflater, parent, false)
         }
         return MessageViewHolder(binding.root)
     }
@@ -92,4 +68,28 @@ class MessageListAdapter(private val viewModel: CurrentChatViewModel) :
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
         holder.bind(items[position])
     }
+}
+
+class MessageDiffCallback(
+    private val newList: List<TdApi.Message>,
+    private val oldList: List<TdApi.Message>
+) : DiffUtil.Callback() {
+
+
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        val old = oldList[oldItemPosition]
+        val new = newList[newItemPosition]
+        return old.id == new.id
+    }
+
+    override fun getOldListSize(): Int = oldList.size
+
+    override fun getNewListSize(): Int = newList.size
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        val old = oldList[oldItemPosition]
+        val new = newList[newItemPosition]
+        return old.content == new.content && old.date == new.date && old.chatId == new.chatId && old.editDate == new.editDate
+    }
+
 }

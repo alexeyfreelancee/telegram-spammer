@@ -156,7 +156,11 @@ class SpammerService : Service() {
         var successCounter = 0
         var errorsCounter = 0
         for ((i, user) in usersChecked.withIndex()) {
-            val success = TelegramClientUtil.prepareMessage(client, settings, user)
+            val name = "${user.firstName} ${user.lastName}".trim()
+            val photos = settings.files.split(",").removeEmpty()
+            val message = getRandomMessage(settings.message, name)
+
+            val success = TelegramClientUtil.sendMessage(client,photos,message,user.id)
             if (success) {
                 successCounter++
                 sendNotificationService(
@@ -183,5 +187,14 @@ class SpammerService : Service() {
         TelegramClientUtil.stopClient(phone)
     }
 
-
+    private fun getRandomMessage(message: String, name: String): String {
+        var result = message.replace("@name", name)
+        val pattern =
+            Regex("<\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?\\w*\\|?>")
+        pattern.findAll(message).forEach { resultMatch ->
+            val words = resultMatch.value.split("[|<>]".toRegex()).removeEmpty()
+            result = result.replace(resultMatch.value, words.getRandom())
+        }
+        return result
+    }
 }

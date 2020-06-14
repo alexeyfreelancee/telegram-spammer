@@ -31,6 +31,8 @@
             app:layout_constraintStart_toStartOf="parent">
 
             <EditText
+                android:text="@={viewmodel.message}"
+                android:hint="@string/enter_msg"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
@@ -40,6 +42,7 @@
                 android:layout_toStartOf="@id/send" />
 
             <ImageView
+                android:onClick="@{(view)-> viewmodel.sendMessage()}"
                 android:layout_marginEnd="4dp"
                 android:id="@+id/send"
                 android:layout_width="45dp"

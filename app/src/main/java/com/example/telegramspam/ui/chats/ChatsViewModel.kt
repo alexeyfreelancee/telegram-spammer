@@ -5,6 +5,7 @@ import com.example.telegramspam.data.Repository
 import com.example.telegramspam.models.Event
 
 import kotlinx.coroutines.launch
+import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 
 class ChatViewModel(private val repository: Repository) : ViewModel() {
@@ -27,9 +28,21 @@ class ChatViewModel(private val repository: Repository) : ViewModel() {
     fun openChat(id:Long){
         openChat.value = Event(id)
     }
+
     fun setupAccount(accountId: Int)  {
         this.accountId = accountId
-        loadChats()
+        viewModelScope.launch {
+            val client = repository.provideClient(accountId)
+            loadChats()
+            client?.setUpdatesHandler(updateHandler)
+        }
+    }
+
+    private val updateHandler = Client.ResultHandler{update->
+        when(update.constructor){
+            TdApi.UpdateNewMessage.CONSTRUCTOR -> loadChats()
+            TdApi.UpdateNewChat.CONSTRUCTOR -> loadChats()
+        }
     }
 }
 

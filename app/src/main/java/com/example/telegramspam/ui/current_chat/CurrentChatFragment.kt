@@ -1,5 +1,6 @@
 package com.example.telegramspam.ui.current_chat
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,9 +12,11 @@ import com.example.telegramspam.ACCOUNT_ID
 import com.example.telegramspam.CHAT_ID
 import com.example.telegramspam.adapters.MessageListAdapter
 import com.example.telegramspam.databinding.CurrentChatFragmentBinding
+import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
 import org.kodein.di.generic.instance
+
 
 class CurrentChatFragment : Fragment(), KodeinAware {
     override val kodein by kodein()
@@ -37,17 +40,24 @@ class CurrentChatFragment : Fragment(), KodeinAware {
             arguments?.getInt(ACCOUNT_ID, 0) ?: 0
         )
         setupMessagesList()
+        KeyboardVisibilityEvent.setEventListener(activity){ if(it)scrollToBottom()}
         return binding.root
     }
 
 
-    private fun setupMessagesList(){
+
+
+    private fun setupMessagesList() {
         adapter = MessageListAdapter(viewModel)
         binding.messageList.adapter = adapter
         viewModel.messages.observe(viewLifecycleOwner, Observer {
             adapter.fetchList(it)
-            binding.messageList.layoutManager?.scrollToPosition(it.size - 1)
+            scrollToBottom()
         })
+    }
+
+    private fun scrollToBottom() {
+        binding.messageList.layoutManager?.scrollToPosition(adapter.itemCount - 1)
     }
 
 }

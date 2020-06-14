@@ -9,8 +9,55 @@ import androidx.databinding.InverseBindingListener
 import com.bumptech.glide.Glide
 import com.example.telegramspam.R
 import com.example.telegramspam.models.Account
+import org.drinkless.td.libcore.telegram.TdApi
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
+@BindingAdapter("msgTime")
+fun setMsgTime(textView: TextView, time:Int?){
+    if(time!=null){
+        val date = Date(time.toLong() * 1000)
+        textView.text =  SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
+    }
+}
+@BindingAdapter("message")
+fun getMessageText(textView:TextView, content: TdApi.MessageContent?){
+    if(content!= null){
+        val text =  when(content){
+            is TdApi.MessageText-> content.text.text
+            is TdApi.MessagePhoto -> "Photo"
+            is TdApi.MessageVideo -> "Video"
+            is TdApi.MessageDocument -> "Document"
+            is TdApi.MessageAudio -> "Audio"
+            is TdApi.MessageCall -> {
+                if(content.duration == 0) "Canceled call"
+                else {
+                    val minutes = content.duration / 60
+                    val seconds = content.duration % 60
+                    val secString = if(seconds < 10) "0$seconds" else seconds.toString()
+                    val minString = if(minutes< 10) "0$minutes" else minutes.toString()
+                    "Call $minString:$secString"
+                }
+            }
+            is TdApi.MessageChatAddMembers -> "Someone joined this channel"
+            is TdApi.MessageChatJoinByLink -> "Someone joined this channel"
+            is TdApi.MessageChatDeleteMember -> "Someone left this channel"
+            is TdApi.MessageVoiceNote -> {
+                val minutes = content.voiceNote.duration  / 60
+                val seconds =content.voiceNote.duration % 60
+                val secString = if(seconds < 10) "0$seconds" else seconds.toString()
+                val minString = if(minutes< 10) "0$minutes" else minutes.toString()
+                "Voice note $minString:$secString"
+            }
+            is TdApi.MessageSticker -> "Sticker"
+            else->  "..."
+        }
+        textView.text = text
+    }
+
+}
 
 @BindingAdapter("phoneNumber")
 fun setPhoneNumber(textView: TextView, phoneNumber:String?){

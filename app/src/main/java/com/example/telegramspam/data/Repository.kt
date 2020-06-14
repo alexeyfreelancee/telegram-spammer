@@ -17,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 
 
@@ -24,31 +25,49 @@ class Repository(
     private val db: AppDatabase,
     private val authUtil: TelegramAuthUtil
 ) {
-    suspend fun loadMessages(chatId: Long, accountId: Int): List<TdApi.Message> {
+    suspend fun provideClient(accountId: Int): Client? {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             val account = loadAccount(accountId)
-            val client = TelegramClientUtil.provideClient(account)
+            val result = TelegramClientUtil.provideClient(account)
+            if (result is ClientCreateResult.Success) result.client else null
+        }
 
-            if (client is ClientCreateResult.Success) {
-                val chat = TelegramClientUtil.loadChat(client.client, chatId)
-                if (chat is GetChatInfoResult.Success) {
-                    val resultList = ArrayList<TdApi.Message>()
-                    var fromMsgId:Long = 0
-                    while("pidoras" != "your name"){
-                        val getMessagesResult = TelegramClientUtil.loadMessages(client.client, chatId, fromMsgId)
-                        fromMsgId = if (getMessagesResult is GetMessagesResult.Success) {
-                            val messages = getMessagesResult.messages.messages
-                            if(messages.isEmpty()){
-                                break
-                            }
-                            resultList.addAll(messages)
-                            getMessagesResult.messages.messages.last().id
-                        } else 0
+    }
 
-                    }
+    suspend fun sendMessage(
+        text: String,
+        chatId: Int,
+        accountId: Int,
+        photos: List<String>
+    ): Boolean {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            val client = provideClient(accountId)
+            return@withContext TelegramClientUtil.sendMessage(client, photos, text, chatId)
+        }
+    }
 
-                    return@withContext resultList.reversed()
+    suspend fun loadMessages(chatId: Long, accountId: Int): List<TdApi.Message> {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            val client = provideClient(accountId)
+            val chat = TelegramClientUtil.loadChat(client, chatId)
+            if (chat is GetChatInfoResult.Success) {
+                val resultList = ArrayList<TdApi.Message>()
+                var fromMsgId: Long = 0
+                while ("pidoras" != "your name") {
+                    val getMessagesResult =
+                        TelegramClientUtil.loadMessages(client, chatId, fromMsgId)
+                    fromMsgId = if (getMessagesResult is GetMessagesResult.Success) {
+                        val messages = getMessagesResult.messages.messages
+                        if (messages.isEmpty()) {
+                            break
+                        }
+                        resultList.addAll(messages)
+                        getMessagesResult.messages.messages.last().id
+                    } else 0
+
                 }
+
+                return@withContext resultList.reversed()
             }
             emptyList<TdApi.Message>()
         }
