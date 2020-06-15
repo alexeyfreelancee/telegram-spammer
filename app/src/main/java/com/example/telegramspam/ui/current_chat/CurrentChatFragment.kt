@@ -1,20 +1,22 @@
 package com.example.telegramspam.ui.current_chat
 
-import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.telegramspam.ACCOUNT_ID
 import com.example.telegramspam.CHAT_ID
+import com.example.telegramspam.FILE_ID
+import com.example.telegramspam.R
 import com.example.telegramspam.adapters.MessageListAdapter
 import com.example.telegramspam.databinding.CurrentChatFragmentBinding
 import com.example.telegramspam.ui.MainActivity
-import com.example.telegramspam.utils.log
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
@@ -27,7 +29,7 @@ class CurrentChatFragment : Fragment(), KodeinAware {
     private lateinit var binding: CurrentChatFragmentBinding
     private lateinit var adapter: MessageListAdapter
     private lateinit var viewModel: CurrentChatViewModel
-
+    private lateinit var layoutManager: LinearLayoutManager
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -48,23 +50,32 @@ class CurrentChatFragment : Fragment(), KodeinAware {
     }
 
 
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val navController = Navigation.findNavController(view)
+        viewModel.openPhoto.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                navController.navigate(R.id.action_currentChatFragment_to_viewPhotoFragment, bundleOf(
+                    FILE_ID to it.peekContent()
+                ))
+            }
+        })
+    }
 
     private fun setupMessagesList() {
-        val layoutManager = LinearLayoutManager(requireContext())
-
+        layoutManager = LinearLayoutManager(requireContext())
         adapter = MessageListAdapter(viewModel)
         binding.messageList.adapter = adapter
         binding.messageList.layoutManager = layoutManager
         viewModel.messages.observe(viewLifecycleOwner, Observer {
             adapter.fetchList(it)
-           
+            scrollToBottom()
         })
     }
 
     private fun scrollToBottom() {
-        binding.messageList.layoutManager?.scrollToPosition(adapter.itemCount - 1)
-
+        layoutManager.scrollToPosition(adapter.itemCount - 1)
+        layoutManager.scrollToPositionWithOffset(adapter.itemCount - 1, 100)
     }
 
     override fun onStop() {

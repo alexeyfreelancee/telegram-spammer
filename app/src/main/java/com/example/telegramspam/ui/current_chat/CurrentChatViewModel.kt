@@ -4,6 +4,7 @@ import androidx.lifecycle.*
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import com.example.telegramspam.data.Repository
+import com.example.telegramspam.models.Event
 import com.example.telegramspam.utils.log
 import kotlinx.coroutines.launch
 import org.drinkless.td.libcore.telegram.Client
@@ -12,18 +13,20 @@ import org.drinkless.td.libcore.telegram.TdApi
 class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
     private val _messages = MutableLiveData<List<TdApi.Message>>()
     val messages: LiveData<List<TdApi.Message>> = _messages
-
+    val openPhoto = MutableLiveData<Event<Int?>>()
     val message = MutableLiveData("")
-
+    val dataLoading = MutableLiveData<Boolean>()
     val chat = MutableLiveData<TdApi.Chat>()
     val opponent = MutableLiveData<TdApi.User>()
     private val photos = ArrayList<String>()
     private var chatId: Long = 0
     var accountId: Int = 0
 
-    private fun loadMessages() {
+    private fun loadMessages(firstLoad: Boolean = false) {
         viewModelScope.launch {
+            if(firstLoad) dataLoading.value = true
            _messages.value = repository.loadMessages(chatId,accountId)
+            if(firstLoad) dataLoading.value = false
         }
     }
 
@@ -37,6 +40,12 @@ class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
 
     }
 
+    fun openPhoto(content:TdApi.MessageContent){
+        when(content){
+            is TdApi.MessagePhoto -> openPhoto.value = Event(content.photo.sizes.last().photo.id)
+            is TdApi.MessageVideo -> openPhoto.value = Event(content.video.thumbnail?.photo?.id)
+        }
+    }
     fun setupChat(chatId: Long, accountId: Int) {
         this.chatId = chatId
         this.accountId = accountId
@@ -45,7 +54,7 @@ class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
             opponent.value = repository.getUser(chatId, accountId)
             val client = repository.provideClient(accountId)
             client?.setUpdatesHandler(updatesHandler)
-            loadMessages()
+            loadMessages(true)
         }
 
     }

@@ -71,7 +71,7 @@ class Repository(
             if (chat is GetChatInfoResult.Success) {
                 var fromMsgId: Long = 0
                 val resultList = ArrayList<TdApi.Message>()
-                while (resultList.size < 1000) {
+                while (resultList.size < 400) {
                     val getMessagesResult =
                         TelegramClientUtil.loadMessages(client, chatId, fromMsgId)
                     if (getMessagesResult is GetMessagesResult.Success) {

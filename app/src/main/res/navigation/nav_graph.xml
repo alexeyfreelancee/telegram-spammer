@@ -54,5 +54,14 @@
         android:id="@+id/currentChatFragment"
         android:name="com.example.telegramspam.ui.current_chat.CurrentChatFragment"
         android:label="current_chat_fragment"
-        tools:layout="@layout/current_chat_fragment" />
+        tools:layout="@layout/current_chat_fragment" >
+        <action
+            android:id="@+id/action_currentChatFragment_to_viewPhotoFragment"
+            app:destination="@id/viewPhotoFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/viewPhotoFragment"
+        android:name="com.example.telegramspam.ui.view_photo.ViewPhotoFragment"
+        android:label="fragment_view_photo"
+        tools:layout="@layout/fragment_view_photo" />
 </navigation>

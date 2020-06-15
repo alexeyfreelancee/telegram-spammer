@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <data>
+        <import type="android.view.View"/>
         <variable
             name="viewmodel"
             type="com.example.telegramspam.ui.current_chat.CurrentChatViewModel" />
@@ -40,15 +41,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
         </LinearLayout>
+
+
         <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:overScrollMode="never"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:id="@+id/messageList"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@+id/relativeLayout"
             app:layout_constraintTop_toBottomOf="@id/action_bar" />
 
+        <ProgressBar
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:visibility="@{viewmodel.dataLoading ? View.VISIBLE : View.GONE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
         <RelativeLayout
             android:id="@+id/relativeLayout"
             android:layout_width="match_parent"

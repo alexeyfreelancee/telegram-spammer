@@ -46,6 +46,17 @@
                 android:textColor="#000"
                 android:textSize="12sp" />
 
+            <ImageView
+                android:scaleType="centerCrop"
+                android:onClick="@{(view)->viewmodel.openPhoto(message.content)}"
+                app:photo="@{message.content}"
+                android:layout_marginBottom="4dp"
+                android:id="@+id/img1"
+                android:layout_marginEnd="8dp"
+                android:layout_below="@id/msgText"
+                android:layout_width="50dp"
+                android:layout_height="50dp"/>
+
             <View
                 android:id="@+id/help"
                 android:layout_toEndOf="@id/msgText"
@@ -54,10 +65,12 @@
 
             <TextView
                 android:textColor="#000"
-                android:textSize="10sp"
                 android:layout_toStartOf="@id/help"
+                android:textSize="10sp"
+                android:id="@+id/time"
+
                 tools:text="22:23"
-                android:layout_below="@id/msgText"
+                android:layout_below="@id/img1"
                 app:msgTime="@{message.date}"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
