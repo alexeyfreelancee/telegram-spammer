@@ -21,6 +21,7 @@ import kotlinx.coroutines.withContext
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 import java.io.File
+import java.lang.Exception
 
 
 class Repository(
@@ -31,18 +32,10 @@ class Repository(
 
     fun playVoice(file: File) {
         if (file.exists()) {
-            if (mediaPlayer.isPlaying) {
-                mediaPlayer.apply {
-                    stop()
-                    release()
-                }
-            } else {
-                mediaPlayer.apply {
-                    release()
-                    setDataSource(file.path)
-                    prepare()
-                    start()
-                }
+            mediaPlayer.apply {
+                setDataSource(file.path)
+                prepare()
+                start()
             }
         }
     }
