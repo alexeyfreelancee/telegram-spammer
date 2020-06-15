@@ -25,13 +25,21 @@ class Repository(
     private val db: AppDatabase,
     private val authUtil: TelegramAuthUtil
 ) {
-    suspend fun getUser(userId:Long, accountId: Int): TdApi.User?{
-        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-           val client = provideClient(accountId)
-           val result = TelegramClientUtil.getUser(client, userId.toInt())
-            if(result is GetUserResult.Success) result.user else null
+    suspend fun getChat(chatId: Long, accountId: Int) : TdApi.Chat?{
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext){
+            val client = provideClient(accountId)
+            val result = TelegramClientUtil.getChat(client,chatId)
+            if(result is GetChat.Success) result.chat else null
         }
     }
+    suspend fun getUser(userId: Long, accountId: Int): TdApi.User? {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            val client = provideClient(accountId)
+            val result = TelegramClientUtil.getUser(client, userId.toInt())
+            if (result is GetUserResult.Success) result.user else null
+        }
+    }
+
     suspend fun provideClient(accountId: Int): Client? {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             val account = loadAccount(accountId)
@@ -55,20 +63,27 @@ class Repository(
 
     suspend fun loadMessages(
         chatId: Long,
-        accountId: Int,
-        fromMsgId: Long,
-        limit: Int,
-        offset: Int = 0
+        accountId: Int
     ): List<TdApi.Message> {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             val client = provideClient(accountId)
             val chat = TelegramClientUtil.loadChat(client, chatId)
             if (chat is GetChatInfoResult.Success) {
-                val getMessagesResult =
-                    TelegramClientUtil.loadMessages(client, chatId, fromMsgId, limit, offset)
-                if (getMessagesResult is GetMessagesResult.Success) {
-                    return@withContext getMessagesResult.messages.messages.reversed()
+                var fromMsgId: Long = 0
+                val resultList = ArrayList<TdApi.Message>()
+                while (resultList.size < 1000) {
+                    val getMessagesResult =
+                        TelegramClientUtil.loadMessages(client, chatId, fromMsgId)
+                    if (getMessagesResult is GetMessagesResult.Success) {
+                        val messages = getMessagesResult.messages.messages
+                        if(messages.isEmpty()) break
+                        resultList.addAll(messages)
+                        fromMsgId = messages.last().id
+                    } else{
+                        break
+                    }
                 }
+                return@withContext resultList.reversed()
             }
             emptyList<TdApi.Message>()
         }

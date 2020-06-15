@@ -13,6 +13,11 @@ sealed class GetChatResult {
     class Error(val message:String = "error") : GetChatResult()
 }
 
+sealed class GetChat {
+    class Success(val chat: TdApi.Chat) : GetChat()
+    class Error(val message:String = "error") : GetChat()
+}
+
 sealed class GetUserResult {
     class Success(val user: TdApi.User) : GetUserResult()
     class Error(val message:String = "error") : GetUserResult()

@@ -10,27 +10,21 @@ import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 
 class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
-    var messages: LiveData<PagedList<TdApi.Message>> = MutableLiveData()
+    private val _messages = MutableLiveData<List<TdApi.Message>>()
+    val messages: LiveData<List<TdApi.Message>> = _messages
+
     val message = MutableLiveData("")
 
+    val chat = MutableLiveData<TdApi.Chat>()
     val opponent = MutableLiveData<TdApi.User>()
     private val photos = ArrayList<String>()
     private var chatId: Long = 0
     var accountId: Int = 0
 
     private fun loadMessages() {
-        val config = PagedList.Config.Builder()
-            .setEnablePlaceholders(false)
-            .setPageSize(15)
-            .build()
-
-
-        messages = LivePagedListBuilder(
-            MessagesDataSourceFactory(
-                repository,
-                chatId, accountId
-            ), config
-        ).build()
+        viewModelScope.launch {
+           _messages.value = repository.loadMessages(chatId,accountId)
+        }
     }
 
     fun sendMessage() {
@@ -47,9 +41,9 @@ class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
         this.chatId = chatId
         this.accountId = accountId
         viewModelScope.launch {
+            chat.value = repository.getChat(chatId, accountId)
             opponent.value = repository.getUser(chatId, accountId)
             val client = repository.provideClient(accountId)
-
             client?.setUpdatesHandler(updatesHandler)
             loadMessages()
         }

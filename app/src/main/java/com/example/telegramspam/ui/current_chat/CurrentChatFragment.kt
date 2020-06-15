@@ -52,20 +52,19 @@ class CurrentChatFragment : Fragment(), KodeinAware {
 
     private fun setupMessagesList() {
         val layoutManager = LinearLayoutManager(requireContext())
+
         adapter = MessageListAdapter(viewModel)
         binding.messageList.adapter = adapter
         binding.messageList.layoutManager = layoutManager
         viewModel.messages.observe(viewLifecycleOwner, Observer {
-            log("observed list of ${it.size} messages")
-            adapter.submitList(it)
-            if(layoutManager.findFirstVisibleItemPosition() < 10){
-                scrollToBottom()
-            }
+            adapter.fetchList(it)
+           
         })
     }
 
     private fun scrollToBottom() {
         binding.messageList.layoutManager?.scrollToPosition(adapter.itemCount - 1)
+
     }
 
     override fun onStop() {

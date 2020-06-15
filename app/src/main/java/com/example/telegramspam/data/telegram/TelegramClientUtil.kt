@@ -4,7 +4,6 @@ import com.example.telegramspam.API_HASH
 import com.example.telegramspam.API_ID
 import com.example.telegramspam.SOCKS5
 import com.example.telegramspam.models.*
-import com.example.telegramspam.utils.getRandom
 import com.example.telegramspam.utils.log
 import com.example.telegramspam.utils.removeEmpty
 import kotlinx.coroutines.CancellableContinuation
@@ -15,17 +14,15 @@ import org.drinkless.td.libcore.telegram.TdApi
 object TelegramClientUtil {
     private val clients = HashMap<String, Client?>()
 
-
-
     suspend fun loadMessages(
         client: Client?,
         chatId: Long,
         fromMsgId: Long,
-        limit:Int,
+        limit: Int = 100,
         offset: Int = 0
     ): GetMessagesResult {
         return suspendCancellableCoroutine { continuation ->
-            client?.send(TdApi.GetChatHistory(chatId, fromMsgId,offset , limit, false)) {
+            client?.send(TdApi.GetChatHistory(chatId, fromMsgId, offset, limit, false)) {
                 when (it) {
                     is TdApi.Messages -> continuation.resume(GetMessagesResult.Success(it)) {}
                     is TdApi.Error -> {
@@ -63,7 +60,7 @@ object TelegramClientUtil {
     suspend fun loadChats(client: Client?): GetChatsResult {
         return suspendCancellableCoroutine { continuation ->
 
-            client?.send(TdApi.GetChats(TdApi.ChatListMain(),Long.MAX_VALUE, 0, 250)) {
+            client?.send(TdApi.GetChats(TdApi.ChatListMain(), Long.MAX_VALUE, 0, 250)) {
                 when (it) {
                     is TdApi.Chats -> {
                         continuation.resume(GetChatsResult.Success(it)) {}
@@ -240,7 +237,7 @@ object TelegramClientUtil {
         return false
     }
 
-     fun checkOnline(status: TdApi.UserStatus, maxOnlineDifference: Long): Boolean {
+    fun checkOnline(status: TdApi.UserStatus, maxOnlineDifference: Long): Boolean {
         return when (status) {
             is TdApi.UserStatusOffline -> {
                 val minOnline = System.currentTimeMillis() / 1000 - maxOnlineDifference
@@ -288,8 +285,8 @@ object TelegramClientUtil {
     suspend fun sendMessage(
         client: Client?,
         photos: List<String>,
-        message:String,
-        chatId:Int
+        message: String,
+        chatId: Int
     ) = suspendCancellableCoroutine<Boolean> { continuation ->
         if (client != null) {
             val caption = TdApi.FormattedText(message, null)
@@ -363,7 +360,18 @@ object TelegramClientUtil {
         }
     }
 
-
+    suspend fun getChat(client: Client?, id: Long): GetChat {
+        return suspendCancellableCoroutine { continuation ->
+            client?.send(TdApi.GetChat(id)) { chat ->
+                if (chat is TdApi.Chat) {
+                    continuation.resume(GetChat.Success(chat)) {}
+                } else {
+                    continuation.resume(GetChat.Error()) {}
+                    log(chat)
+                }
+            }
+        }
+    }
 
     suspend fun getChat(client: Client?, link: String): GetChatResult {
         return suspendCancellableCoroutine { continuation ->
@@ -377,19 +385,6 @@ object TelegramClientUtil {
                 } else {
                     continuation.resume(GetChatResult.Error()) {}
                     log(chat)
-                }
-            }
-        }
-    }
-
-    suspend fun getUserFullInfo(client: Client, user: TdApi.User): TdApi.UserFullInfo {
-        return suspendCancellableCoroutine { continuation ->
-            client.send(TdApi.GetUserFullInfo(user.id)) { fullInfo ->
-                if (fullInfo is TdApi.UserFullInfo) {
-                    continuation.resume(fullInfo) {}
-                } else {
-
-                    log(fullInfo)
                 }
             }
         }
