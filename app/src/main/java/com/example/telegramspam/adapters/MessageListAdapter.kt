@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 
@@ -13,22 +14,16 @@ import com.example.telegramspam.ui.current_chat.CurrentChatViewModel
 import org.drinkless.td.libcore.telegram.TdApi
 
 class MessageListAdapter(private val viewModel: CurrentChatViewModel) :
-    RecyclerView.Adapter<MessageListAdapter.MessageViewHolder>() {
+    PagedListAdapter<TdApi.Message, MessageListAdapter.MessageViewHolder>(MessageDiffUtil()) {
     private val MY_MSG = 1
     private val OPPONENT_MSG = 0
 
-    private val items = ArrayList<TdApi.Message>()
 
-    fun fetchList(newList: List<TdApi.Message>) {
-        val diffCallback = MessageDiffCallback(newList, items)
-        val diffResult = DiffUtil.calculateDiff(diffCallback)
-        items.clear()
-        items.addAll(newList)
-        diffResult.dispatchUpdatesTo(this)
-    }
+
+
 
     inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bind(message: TdApi.Message) {
+        fun bind(message: TdApi.Message?) {
 
             if (itemViewType == MY_MSG) {
                 DataBindingUtil.bind<MyMessageRowBinding>(itemView)?.apply {
@@ -45,8 +40,8 @@ class MessageListAdapter(private val viewModel: CurrentChatViewModel) :
     }
 
     override fun getItemViewType(position: Int): Int {
-        val msg = items[position]
-        return if (msg.senderUserId == viewModel.accountId) {
+        val msg = getItem(position)
+        return if (msg?.senderUserId == viewModel.accountId) {
             MY_MSG
         } else {
             OPPONENT_MSG
@@ -63,33 +58,22 @@ class MessageListAdapter(private val viewModel: CurrentChatViewModel) :
         return MessageViewHolder(binding.root)
     }
 
-    override fun getItemCount(): Int = items.size
+
 
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
-        holder.bind(items[position])
+        holder.bind(getItem(position))
     }
 }
 
-class MessageDiffCallback(
-    private val newList: List<TdApi.Message>,
-    private val oldList: List<TdApi.Message>
-) : DiffUtil.Callback() {
+class MessageDiffUtil: DiffUtil.ItemCallback<TdApi.Message>() {
 
 
-    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        val old = oldList[oldItemPosition]
-        val new = newList[newItemPosition]
+    override fun areItemsTheSame(old: TdApi.Message, new: TdApi.Message): Boolean {
         return old.id == new.id
     }
 
-    override fun getOldListSize(): Int = oldList.size
-
-    override fun getNewListSize(): Int = newList.size
-
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        val old = oldList[oldItemPosition]
-        val new = newList[newItemPosition]
-        return old.content == new.content && old.date == new.date && old.chatId == new.chatId && old.editDate == new.editDate
+    override fun areContentsTheSame(old: TdApi.Message, new: TdApi.Message): Boolean {
+        return old.content.constructor == new.content.constructor && old.date == new.date && old.chatId == new.chatId && old.editDate == new.editDate
     }
 
 }

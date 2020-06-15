@@ -45,6 +45,22 @@
                 android:padding="8dp"
                 android:textColor="#000"
                 android:textSize="12sp" />
+
+            <View
+                android:id="@+id/help"
+                android:layout_toEndOf="@id/msgText"
+                android:layout_width="0.1dp"
+                android:layout_height="0.1dp"/>
+
+            <TextView
+                android:textColor="#000"
+                android:textSize="10sp"
+                android:layout_toStartOf="@id/help"
+                tools:text="22:23"
+                android:layout_below="@id/msgText"
+                app:msgTime="@{message.date}"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
         </RelativeLayout>
     </RelativeLayout>
 </layout>

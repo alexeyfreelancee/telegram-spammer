@@ -1,50 +1,60 @@
 package com.example.telegramspam.ui.current_chat
 
 import androidx.lifecycle.*
+import androidx.paging.LivePagedListBuilder
+import androidx.paging.PagedList
 import com.example.telegramspam.data.Repository
+import com.example.telegramspam.utils.log
 import kotlinx.coroutines.launch
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 
 class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
-    private val _messages = MutableLiveData<List<TdApi.Message>>()
-    val messages : LiveData<List<TdApi.Message>> = _messages
-
+    var messages: LiveData<PagedList<TdApi.Message>> = MutableLiveData()
     val message = MutableLiveData("")
 
     private val photos = ArrayList<String>()
     private var chatId: Long = 0
-     var accountId: Int = 0
+    var accountId: Int = 0
 
-    private fun loadMessages(){
-        viewModelScope.launch {
-            _messages.value = repository.loadMessages(chatId, accountId)
-        }
+    private fun loadMessages() {
+        val config = PagedList.Config.Builder()
+            .setEnablePlaceholders(false)
+            .setPageSize(15)
+            .build()
+
+
+        messages = LivePagedListBuilder(
+            MessagesDataSourceFactory(
+                repository,
+                chatId, accountId
+            ), config
+        ).build()
     }
 
-    fun sendMessage(){
+    fun sendMessage() {
         viewModelScope.launch {
-            val success = repository.sendMessage(message.value!!,chatId.toInt(),accountId, photos)
-            if(success){
+            val success = repository.sendMessage(message.value!!, chatId.toInt(), accountId, photos)
+            if (success) {
                 message.value = ""
             }
         }
 
     }
 
-    fun setupChat(chatId:Long, accountId:Int){
+    fun setupChat(chatId: Long, accountId: Int) {
         this.chatId = chatId
         this.accountId = accountId
         viewModelScope.launch {
             val client = repository.provideClient(accountId)
-            client?.setUpdatesHandler(updateHandler)
+            client?.setUpdatesHandler(updatesHandler)
             loadMessages()
         }
 
     }
 
-    private val updateHandler = Client.ResultHandler { update->
-        when(update.constructor){
+    private val updatesHandler = Client.ResultHandler { update ->
+        when (update.constructor) {
             TdApi.UpdateNewMessage.CONSTRUCTOR -> loadMessages()
         }
     }

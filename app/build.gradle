@@ -98,4 +98,7 @@ dependencies {
 
     //keyboard listener
     implementation 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:2.0.0'
+
+    //PagingLibrary
+    implementation 'android.arch.paging:runtime:1.0.1'
 }

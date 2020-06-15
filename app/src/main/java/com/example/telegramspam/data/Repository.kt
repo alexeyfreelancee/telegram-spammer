@@ -46,28 +46,22 @@ class Repository(
         }
     }
 
-    suspend fun loadMessages(chatId: Long, accountId: Int): List<TdApi.Message> {
+    suspend fun loadMessages(
+        chatId: Long,
+        accountId: Int,
+        fromMsgId: Long,
+        limit: Int,
+        offset: Int = 0
+    ): List<TdApi.Message> {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             val client = provideClient(accountId)
             val chat = TelegramClientUtil.loadChat(client, chatId)
             if (chat is GetChatInfoResult.Success) {
-                val resultList = ArrayList<TdApi.Message>()
-                var fromMsgId: Long = 0
-                while ("pidoras" != "your name") {
-                    val getMessagesResult =
-                        TelegramClientUtil.loadMessages(client, chatId, fromMsgId)
-                    fromMsgId = if (getMessagesResult is GetMessagesResult.Success) {
-                        val messages = getMessagesResult.messages.messages
-                        if (messages.isEmpty()) {
-                            break
-                        }
-                        resultList.addAll(messages)
-                        getMessagesResult.messages.messages.last().id
-                    } else 0
-
+                val getMessagesResult =
+                    TelegramClientUtil.loadMessages(client, chatId, fromMsgId, limit, offset)
+                if (getMessagesResult is GetMessagesResult.Success) {
+                    return@withContext getMessagesResult.messages.messages.reversed()
                 }
-
-                return@withContext resultList.reversed()
             }
             emptyList<TdApi.Message>()
         }

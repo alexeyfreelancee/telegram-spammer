@@ -20,10 +20,12 @@ object TelegramClientUtil {
     suspend fun loadMessages(
         client: Client?,
         chatId: Long,
-        fromMsgId: Long
+        fromMsgId: Long,
+        limit:Int,
+        offset: Int = 0
     ): GetMessagesResult {
         return suspendCancellableCoroutine { continuation ->
-            client?.send(TdApi.GetChatHistory(chatId, fromMsgId,0 , 100, false)) {
+            client?.send(TdApi.GetChatHistory(chatId, fromMsgId,offset , limit, false)) {
                 when (it) {
                     is TdApi.Messages -> continuation.resume(GetMessagesResult.Success(it)) {}
                     is TdApi.Error -> {
