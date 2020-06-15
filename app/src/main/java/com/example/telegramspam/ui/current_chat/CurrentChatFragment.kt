@@ -26,15 +26,21 @@ import org.kodein.di.generic.instance
 class CurrentChatFragment : Fragment(), KodeinAware {
     override val kodein by kodein()
     private val factory by instance<CurrentChatViewModelFactory>()
-    private lateinit var binding: CurrentChatFragmentBinding
+    private  var binding: CurrentChatFragmentBinding? = null
     private lateinit var adapter: MessageListAdapter
     private lateinit var viewModel: CurrentChatViewModel
     private lateinit var layoutManager: LinearLayoutManager
+
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        if(binding!=null){
+            return binding?.root
+        }
         viewModel = ViewModelProvider(this, factory).get(CurrentChatViewModel::class.java)
+
         binding = CurrentChatFragmentBinding.inflate(inflater, container, false).apply {
             lifecycleOwner = viewLifecycleOwner
             viewmodel = viewModel
@@ -46,7 +52,7 @@ class CurrentChatFragment : Fragment(), KodeinAware {
         )
         setupMessagesList()
         KeyboardVisibilityEvent.setEventListener(activity){ if(it)scrollToBottom()}
-        return binding.root
+        return binding?.root
     }
 
 
@@ -65,8 +71,8 @@ class CurrentChatFragment : Fragment(), KodeinAware {
     private fun setupMessagesList() {
         layoutManager = LinearLayoutManager(requireContext())
         adapter = MessageListAdapter(viewModel)
-        binding.messageList.adapter = adapter
-        binding.messageList.layoutManager = layoutManager
+        binding?.messageList?.adapter = adapter
+        binding?.messageList?.layoutManager = layoutManager
         viewModel.messages.observe(viewLifecycleOwner, Observer {
             adapter.fetchList(it)
             scrollToBottom()
@@ -75,15 +81,7 @@ class CurrentChatFragment : Fragment(), KodeinAware {
 
     private fun scrollToBottom() {
         layoutManager.scrollToPosition(adapter.itemCount - 1)
-        layoutManager.scrollToPositionWithOffset(adapter.itemCount - 1, 100)
     }
 
-    override fun onStop() {
-        super.onStop()
-        (requireActivity() as MainActivity).supportActionBar?.show()
-    }
-    override fun onStart() {
-        super.onStart()
-        (requireActivity() as MainActivity).supportActionBar?.hide()
-    }
+
 }

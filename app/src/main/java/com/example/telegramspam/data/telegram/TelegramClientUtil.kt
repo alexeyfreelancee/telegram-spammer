@@ -18,22 +18,24 @@ object TelegramClientUtil {
     private val clients = HashMap<String, Client?>()
 
     suspend fun downloadFile(id: Int?): File? {
+
         if (id == null) return null
         val values = clients.values.toTypedArray()
         val client = values[Random().nextInt(values.size)] ?: return null
         return suspendCancellableCoroutine { continuation ->
             client.setUpdatesHandler {
                 if (it is TdApi.UpdateFile) {
+                    log(it)
+                    if(!it.file.local.path.isNullOrEmpty()){
+                        continuation.resume(File(it.file.local.path)) {}
+                    }
 
-                    continuation.resume(File(it.file.local.path)) {}
                 }
             }
             client.send(TdApi.DownloadFile(id, 32, 0, 0, false)) {
                 if (it is TdApi.Error) {
-
                     continuation.resume(null) {}
                 } else if (it is TdApi.File){
-
                    if(!it.local.path.isNullOrEmpty()){
                        continuation.resume(File(it.local.path)) {}
                    }

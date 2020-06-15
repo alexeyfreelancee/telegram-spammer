@@ -18,6 +18,7 @@ import com.example.telegramspam.ui.dialogs.ProxyDialog
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.Settings
 import com.example.telegramspam.services.SpammerService
+import com.example.telegramspam.ui.MainActivity
 import com.example.telegramspam.utils.log
 import com.example.telegramspam.utils.toast
 import com.google.gson.Gson
@@ -94,6 +95,7 @@ class CurrentAccountFragment : Fragment(), KodeinAware{
 
         viewModel.openChats.observe(viewLifecycleOwner, Observer {
             if(!it.hasBeenHandled){
+                (requireActivity() as MainActivity).supportActionBar?.hide()
                 navController.navigate(R.id.action_currentAccountFragment_to_chatFragment, bundleOf(
                     ACCOUNT_ID to it.peekContent()
                 ))
@@ -102,5 +104,9 @@ class CurrentAccountFragment : Fragment(), KodeinAware{
     }
 
 
+    override fun onResume() {
+        super.onResume()
+        (requireActivity() as MainActivity).supportActionBar?.show()
+    }
 
 }

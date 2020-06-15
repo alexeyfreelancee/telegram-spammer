@@ -1,6 +1,7 @@
 package com.example.telegramspam
 
 import android.app.Application
+import android.media.MediaPlayer
 import androidx.room.Room
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.data.database.AppDatabase
@@ -25,9 +26,9 @@ class App : Application(), KodeinAware {
                 .fallbackToDestructiveMigration()
                 .build()
         }
-
+        bind() from singleton { MediaPlayer() }
         bind() from eagerSingleton { TelegramAuthUtil() }
-        bind() from eagerSingleton { Repository(instance(), instance()) }
+        bind() from eagerSingleton { Repository(instance(), instance(), instance()) }
         bind() from singleton { ChatsViewModelFactory(instance())}
         bind() from singleton { AccountsViewModelFactory(instance()) }
         bind() from singleton { AddAccountViewModelFactory(instance()) }

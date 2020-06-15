@@ -2,6 +2,7 @@ package com.example.telegramspam.data
 
 import android.content.Context
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Environment
 import androidx.lifecycle.LiveData
 import com.example.telegramspam.data.database.AppDatabase
@@ -19,19 +20,49 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
+import java.io.File
 
 
 class Repository(
     private val db: AppDatabase,
-    private val authUtil: TelegramAuthUtil
+    private val authUtil: TelegramAuthUtil,
+    private val mediaPlayer: MediaPlayer
 ) {
-    suspend fun getChat(chatId: Long, accountId: Int) : TdApi.Chat?{
-        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext){
-            val client = provideClient(accountId)
-            val result = TelegramClientUtil.getChat(client,chatId)
-            if(result is GetChat.Success) result.chat else null
+
+    fun playVoice(file: File) {
+        if (file.exists()) {
+            if (mediaPlayer.isPlaying) {
+                mediaPlayer.apply {
+                    stop()
+                    release()
+                }
+            } else {
+                mediaPlayer.apply {
+                    release()
+                    setDataSource(file.path)
+                    prepare()
+                    start()
+                }
+            }
         }
     }
+
+    suspend fun getVoice(voiceNote: TdApi.MessageVoiceNote): File? {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            val fileId = voiceNote.voiceNote.voice.id
+            TelegramClientUtil.downloadFile(fileId)
+        }
+
+    }
+
+    suspend fun getChat(chatId: Long, accountId: Int): TdApi.Chat? {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            val client = provideClient(accountId)
+            val result = TelegramClientUtil.getChat(client, chatId)
+            if (result is GetChat.Success) result.chat else null
+        }
+    }
+
     suspend fun getUser(userId: Long, accountId: Int): TdApi.User? {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             val client = provideClient(accountId)
@@ -76,10 +107,10 @@ class Repository(
                         TelegramClientUtil.loadMessages(client, chatId, fromMsgId)
                     if (getMessagesResult is GetMessagesResult.Success) {
                         val messages = getMessagesResult.messages.messages
-                        if(messages.isEmpty()) break
+                        if (messages.isEmpty()) break
                         resultList.addAll(messages)
                         fromMsgId = messages.last().id
-                    } else{
+                    } else {
                         break
                     }
                 }

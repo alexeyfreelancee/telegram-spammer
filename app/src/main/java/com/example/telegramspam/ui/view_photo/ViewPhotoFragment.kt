@@ -18,6 +18,7 @@ import com.example.telegramspam.R
 import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.ui.MainActivity
 import com.example.telegramspam.utils.gone
+import com.example.telegramspam.utils.log
 import com.example.telegramspam.utils.visible
 import kotlinx.coroutines.*
 
@@ -36,16 +37,21 @@ class ViewPhotoFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val fileId = arguments?.getInt(FILE_ID, 0) ?: 0
         val photo = view.findViewById<ImageView>(R.id.photo)
-
+        val progress = view.findViewById<ProgressBar>(R.id.progress)
+        progress.visible()
         CoroutineScope(Dispatchers.IO).launch {
+
             val file = TelegramClientUtil.downloadFile(fileId)
+
             withContext(Dispatchers.Main){
+                progress.gone()
                 Glide.with(requireContext())
                     .load(file)
                     .into(photo)
             }
         }
     }
+
 
 
 }

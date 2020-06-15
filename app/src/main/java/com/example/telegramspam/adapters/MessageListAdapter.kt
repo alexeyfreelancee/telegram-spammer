@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.telegramspam.databinding.MyMessageRowBinding
 import com.example.telegramspam.databinding.OpponentMessageRowBinding
 import com.example.telegramspam.ui.current_chat.CurrentChatViewModel
+import com.example.telegramspam.utils.log
 import org.drinkless.td.libcore.telegram.TdApi
 
 class MessageListAdapter(private val viewModel: CurrentChatViewModel) :
@@ -62,6 +63,7 @@ class MessageListAdapter(private val viewModel: CurrentChatViewModel) :
     override fun getItemCount(): Int = items.size
 
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
+
         holder.bind(items[position])
     }
 }

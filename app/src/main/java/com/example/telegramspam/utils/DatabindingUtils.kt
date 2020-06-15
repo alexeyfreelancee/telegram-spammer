@@ -20,6 +20,25 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
+@BindingAdapter("voice")
+fun checkVoice(view: ImageView, content: TdApi.MessageContent?){
+    if(content is TdApi.MessageVoiceNote){
+        view.visible()
+    }else{
+        view.gone()
+    }
+}
+@BindingAdapter("unread")
+fun checkUnread(view: ImageView, views:Int?){
+    if(views!=null){
+
+        if(views < 2){
+            view.setImageResource(R.drawable.ic_unread)
+        }else{
+            view.setImageResource(R.drawable.ic_read)
+        }
+    }
+}
 @BindingAdapter("photo")
 fun setMsgPhoto(imageView: ImageView, content: TdApi.MessageContent?) {
     imageView.gone()
@@ -27,10 +46,9 @@ fun setMsgPhoto(imageView: ImageView, content: TdApi.MessageContent?) {
         CoroutineScope(Dispatchers.IO).launch {
             when (content) {
                 is TdApi.MessagePhoto -> {
-                    val file = TelegramClientUtil.downloadFile(content.photo.sizes[0].photo.id)
+                    val file = TelegramClientUtil.downloadFile(content.photo.sizes[1].photo.id)
 
                     if (file != null) {
-                        log("file ${file.path}")
                         withContext(Dispatchers.Main) {
                             imageView.visible()
                             Glide.with(imageView.context)
@@ -40,7 +58,7 @@ fun setMsgPhoto(imageView: ImageView, content: TdApi.MessageContent?) {
 
                     } else withContext(Dispatchers.Main) { imageView.gone() }
                 }
-
+                is TdApi.MessageVoiceNote -> withContext(Dispatchers.Main) { imageView.visibility = View.INVISIBLE }
                 is TdApi.MessageVideo -> {
                     val file = TelegramClientUtil.downloadFile(content.video.thumbnail?.photo?.id)
                     if (file != null) {
@@ -82,7 +100,7 @@ fun checkOnline(textView: TextView, user: TdApi.User?) {
                     "dd.MM HH:mm",
                     Locale.getDefault()
                 ).format( Date(status.wasOnline.toLong() * 1000))
-                textView.text = "Последний раз был в сети $date"
+                textView.text = "Последний раз в сети $date"
             } else {
                 textView.text = "Оффлайн"
             }
@@ -94,6 +112,7 @@ fun checkOnline(textView: TextView, user: TdApi.User?) {
 @BindingAdapter("message")
 fun getMessageText(textView: TextView, content: TdApi.MessageContent?) {
     if (content != null) {
+        textView.visible()
         val text = when (content) {
             is TdApi.SendMessageAlbum -> {
                 val res = StringBuilder()
@@ -104,12 +123,21 @@ fun getMessageText(textView: TextView, content: TdApi.MessageContent?) {
             }
             is TdApi.MessageText -> content.text.text
             is TdApi.MessagePhoto -> {
-                textView.gone()
-                ""
+                if(textView.id == R.id.last_msg){
+                    "Photo"
+                }else{
+                    textView.gone()
+                    ""
+                }
+
             }
             is TdApi.MessageVideo -> {
-                textView.gone()
-                ""
+                if(textView.id == R.id.last_msg){
+                    "Video"
+                }else{
+                    textView.gone()
+                    ""
+                }
             }
             is TdApi.MessageDocument -> "Document"
             is TdApi.MessageAudio -> "Audio"
