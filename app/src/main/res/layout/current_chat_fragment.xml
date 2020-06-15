@@ -12,6 +12,34 @@
         android:layout_height="match_parent"
         tools:context=".ui.current_chat.CurrentChatFragment">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:id="@+id/action_bar"
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" >
+
+            <TextView
+                android:layout_marginStart="16dp"
+                app:username="@{viewmodel.opponent}"
+                tools:text="Franklin"
+                android:textColor="#fff"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:layout_marginStart="16dp"
+                app:online="@{viewmodel.opponent}"
+                android:textColor="#fff"
+                tools:text="Offline"
+                android:textSize="12sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
         <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:overScrollMode="never"
@@ -19,7 +47,7 @@
             android:id="@+id/messageList"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@+id/relativeLayout"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/action_bar" />
 
         <RelativeLayout
             android:id="@+id/relativeLayout"

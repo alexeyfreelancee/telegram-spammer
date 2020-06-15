@@ -13,6 +13,7 @@ import com.example.telegramspam.ACCOUNT_ID
 import com.example.telegramspam.CHAT_ID
 import com.example.telegramspam.adapters.MessageListAdapter
 import com.example.telegramspam.databinding.CurrentChatFragmentBinding
+import com.example.telegramspam.ui.MainActivity
 import com.example.telegramspam.utils.log
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import org.kodein.di.KodeinAware
@@ -67,4 +68,12 @@ class CurrentChatFragment : Fragment(), KodeinAware {
         binding.messageList.layoutManager?.scrollToPosition(adapter.itemCount - 1)
     }
 
+    override fun onStop() {
+        super.onStop()
+        (requireActivity() as MainActivity).supportActionBar?.show()
+    }
+    override fun onStart() {
+        super.onStart()
+        (requireActivity() as MainActivity).supportActionBar?.hide()
+    }
 }

@@ -13,6 +13,7 @@ class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
     var messages: LiveData<PagedList<TdApi.Message>> = MutableLiveData()
     val message = MutableLiveData("")
 
+    val opponent = MutableLiveData<TdApi.User>()
     private val photos = ArrayList<String>()
     private var chatId: Long = 0
     var accountId: Int = 0
@@ -46,7 +47,9 @@ class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
         this.chatId = chatId
         this.accountId = accountId
         viewModelScope.launch {
+            opponent.value = repository.getUser(chatId, accountId)
             val client = repository.provideClient(accountId)
+
             client?.setUpdatesHandler(updatesHandler)
             loadMessages()
         }
@@ -54,6 +57,10 @@ class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
     }
 
     private val updatesHandler = Client.ResultHandler { update ->
+        viewModelScope.launch {
+            opponent.value = repository.getUser(chatId, accountId)
+        }
+
         when (update.constructor) {
             TdApi.UpdateNewMessage.CONSTRUCTOR -> loadMessages()
         }

@@ -8,6 +8,7 @@ import androidx.databinding.InverseBindingAdapter
 import androidx.databinding.InverseBindingListener
 import com.bumptech.glide.Glide
 import com.example.telegramspam.R
+import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.models.Account
 import org.drinkless.td.libcore.telegram.TdApi
 import java.io.File
@@ -15,11 +16,28 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
+@BindingAdapter("username")
+fun setUsername(textView:TextView, user: TdApi.User?){
+    if(user!=null){
+        textView.text = "${user.firstName} ${user.lastName}"
+    }
+}
 @BindingAdapter("msgTime")
 fun setMsgTime(textView: TextView, time:Int?){
     if(time!=null){
         val date = Date(time.toLong() * 1000)
         textView.text =  SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
+    }
+}
+
+@BindingAdapter("online")
+fun checkOnline(textView: TextView, user:TdApi.User?){
+    if(user!=null){
+        if(TelegramClientUtil.checkOnline(user.status, 60)){
+            textView.text = "Онлайн"
+        }else{
+            textView.text = "Оффлайн"
+        }
     }
 }
 @BindingAdapter("message")

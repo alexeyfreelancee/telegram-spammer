@@ -240,7 +240,7 @@ object TelegramClientUtil {
         return false
     }
 
-    private fun checkOnline(status: TdApi.UserStatus, maxOnlineDifference: Long): Boolean {
+     fun checkOnline(status: TdApi.UserStatus, maxOnlineDifference: Long): Boolean {
         return when (status) {
             is TdApi.UserStatusOffline -> {
                 val minOnline = System.currentTimeMillis() / 1000 - maxOnlineDifference

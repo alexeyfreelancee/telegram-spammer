@@ -25,6 +25,13 @@ class Repository(
     private val db: AppDatabase,
     private val authUtil: TelegramAuthUtil
 ) {
+    suspend fun getUser(userId:Long, accountId: Int): TdApi.User?{
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+           val client = provideClient(accountId)
+           val result = TelegramClientUtil.getUser(client, userId.toInt())
+            if(result is GetUserResult.Success) result.user else null
+        }
+    }
     suspend fun provideClient(accountId: Int): Client? {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             val account = loadAccount(accountId)

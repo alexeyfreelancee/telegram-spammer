@@ -37,8 +37,3 @@ sealed class GetMessagesResult {
     class Success(val messages:TdApi.Messages) : GetMessagesResult()
     class Error(val message:String = "error") : GetMessagesResult()
 }
-
-sealed class Result {
-    class Success<T>(val success: T) : Result()
-    class Error(val error:TdApi.Error) : Result()
-}
