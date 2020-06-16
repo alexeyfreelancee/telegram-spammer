@@ -1,9 +1,12 @@
 package com.example.telegramspam.ui.current_chat
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -50,11 +53,38 @@ class CurrentChatFragment : Fragment(), KodeinAware {
             arguments?.getLong(CHAT_ID, 0) ?: 0,
             arguments?.getInt(ACCOUNT_ID, 0) ?: 0
         )
+        initObservers()
         setupMessagesList()
         KeyboardVisibilityEvent.setEventListener(activity){ if(it)scrollToBottom()}
         return binding?.root
     }
 
+    private fun initObservers(){
+        viewModel.toast.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                Toast.makeText(requireContext(), it.peekContent(), Toast.LENGTH_SHORT).show()
+            }
+        })
+        viewModel.attachFile.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                it.peekContent()
+
+                val intent = Intent().apply {
+                    action = Intent.ACTION_GET_CONTENT
+                    type = "image/* video/*"
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                }
+                startActivityForResult(Intent.createChooser(intent, "Прикрепить файлы"), 2)
+            }
+        })
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == 2 && resultCode == Activity.RESULT_OK && data!=null) {
+            viewModel.fileAttached(data, requireContext())
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

@@ -59,36 +59,106 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-        <RelativeLayout
+        <LinearLayout
             android:id="@+id/relativeLayout"
             android:layout_width="match_parent"
-
-            android:layout_height="50dp"
+            android:orientation="vertical"
+            android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
 
-            <EditText
-                android:text="@={viewmodel.message}"
-                android:hint="@string/enter_msg"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_toStartOf="@id/send" />
+            <LinearLayout
+                android:visibility="@{viewmodel.photos.empty || viewmodel.photos == null ? View.GONE : View.VISIBLE}"
 
-            <ImageView
-                android:onClick="@{(view)-> viewmodel.sendMessage()}"
-                android:layout_marginEnd="4dp"
-                android:id="@+id/send"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_send" />
-        </RelativeLayout>
+                android:orientation="horizontal"
+
+                android:layout_width="match_parent"
+                android:layout_height="60dp">
+
+                <ImageView
+                    android:scaleType="centerCrop"
+                    android:onClick="@{(view)-> viewmodel.removeFile(0)}"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="8dp"
+                    android:id="@+id/first"
+                    android:layout_marginEnd="8dp"
+                    app:file="@{viewmodel.photos}"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"/>
+                <ImageView
+                    android:scaleType="centerCrop"
+                    android:onClick="@{(view)-> viewmodel.removeFile(1)}"
+                    android:layout_gravity="center_vertical"
+                    android:id="@+id/second"
+                    android:layout_marginEnd="8dp"
+                    app:file="@{viewmodel.photos}"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"/>
+                <ImageView
+                    android:scaleType="centerCrop"
+                    android:onClick="@{(view)-> viewmodel.removeFile(2)}"
+                    android:layout_gravity="center_vertical"
+                    android:id="@+id/third"
+                    android:layout_marginEnd="8dp"
+                    app:file="@{viewmodel.photos}"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"/>
+                <ImageView
+                    android:scaleType="centerCrop"
+                    android:onClick="@{(view)-> viewmodel.removeFile(3 )}"
+                    android:layout_gravity="center_vertical"
+                    android:id="@+id/fourth"
+                    android:layout_marginEnd="8dp"
+                    app:file="@{viewmodel.photos}"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"/>
+            </LinearLayout>
+            <View
+                android:id="@+id/half"
+
+                android:background="@android:color/darker_gray"
+                android:layout_width="match_parent"
+                android:layout_height="0.25dp"/>
+
+            <RelativeLayout
+
+                android:layout_width="match_parent"
+                android:layout_height="50dp">
+
+                <ImageView
+                    android:layout_marginStart="4dp"
+                    android:onClick="@{(view)-> viewmodel.attachFile()}"
+                    android:layout_centerVertical="true"
+                    android:id="@+id/add_photo"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_attach"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"/>
+                <EditText
+                    android:layout_toEndOf="@id/add_photo"
+                    android:text="@={viewmodel.message}"
+                    android:hint="@string/enter_msg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/msgText"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_toStartOf="@id/send" />
+
+                <ImageView
+                    android:onClick="@{(view)-> viewmodel.sendMessage()}"
+                    android:layout_marginEnd="4dp"
+                    android:id="@+id/send"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:src="@drawable/ic_send" />
+            </RelativeLayout>
+
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

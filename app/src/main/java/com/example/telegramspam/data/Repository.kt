@@ -10,10 +10,7 @@ import com.example.telegramspam.data.telegram.AuthorizationListener
 import com.example.telegramspam.data.telegram.TelegramAuthUtil
 import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.models.*
-import com.example.telegramspam.utils.generateRandomInt
-import com.example.telegramspam.utils.getPath
-import com.example.telegramspam.utils.log
-import com.example.telegramspam.utils.removeEmpty
+import com.example.telegramspam.utils.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -135,6 +132,16 @@ class Repository(
 
     }
 
+    fun removeFile(position: Int, files:String?):String{
+        return if(files!=null){
+            val first = files.toArrayList()
+            first.removeAt(position)
+            val result = java.lang.StringBuilder()
+            first.forEach { result.append("$it,") }
+            return result.toString().dropLast(1)
+        } else ""
+
+    }
     fun removeFile(position: Int, settings: Settings?): String {
         return if (settings != null) {
             val files = ArrayList<String>()

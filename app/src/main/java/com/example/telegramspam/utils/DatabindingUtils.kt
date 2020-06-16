@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.drinkless.td.libcore.telegram.TdApi
 import java.io.File
+import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -44,11 +45,18 @@ fun setMsgPhoto(imageView: ImageView, content: TdApi.MessageContent?) {
     imageView.gone()
     if (content != null) {
         CoroutineScope(Dispatchers.IO).launch {
+
             when (content) {
                 is TdApi.MessagePhoto -> {
-                    val file = TelegramClientUtil.downloadFile(content.photo.sizes[1].photo.id)
+
+                    val file = try {
+                        TelegramClientUtil.downloadFile(content.photo.sizes[1].photo.id)
+                    }catch (ex:Exception){
+                        TelegramClientUtil.downloadFile(content.photo.sizes[0].photo.id)
+                    }
 
                     if (file != null) {
+
                         withContext(Dispatchers.Main) {
                             imageView.visible()
                             Glide.with(imageView.context)
@@ -56,7 +64,9 @@ fun setMsgPhoto(imageView: ImageView, content: TdApi.MessageContent?) {
                                 .into(imageView)
                         }
 
-                    } else withContext(Dispatchers.Main) { imageView.gone() }
+                    } else withContext(Dispatchers.Main) {
+
+                        imageView.empty() }
                 }
                 is TdApi.MessageVoiceNote -> withContext(Dispatchers.Main) { imageView.visibility = View.INVISIBLE }
                 is TdApi.MessageVideo -> {
@@ -70,7 +80,7 @@ fun setMsgPhoto(imageView: ImageView, content: TdApi.MessageContent?) {
                         }
 
 
-                    } else withContext(Dispatchers.Main) { imageView.gone() }
+                    } else withContext(Dispatchers.Main) { imageView.empty()}
 
                 }
                 else -> withContext(Dispatchers.Main) { imageView.gone() }
@@ -126,8 +136,12 @@ fun getMessageText(textView: TextView, content: TdApi.MessageContent?) {
                 if(textView.id == R.id.last_msg){
                     "Photo"
                 }else{
-                    textView.gone()
-                    ""
+                    if(!content.caption.text.isNullOrEmpty()) content.caption.text
+                    else{
+                        textView.gone()
+                        ""
+                    }
+
                 }
 
             }
@@ -135,8 +149,11 @@ fun getMessageText(textView: TextView, content: TdApi.MessageContent?) {
                 if(textView.id == R.id.last_msg){
                     "Video"
                 }else{
-                    textView.gone()
-                    ""
+                    if(!content.caption.text.isNullOrEmpty()) content.caption.text
+                    else{
+                        textView.gone()
+                        ""
+                    }
                 }
             }
             is TdApi.MessageDocument -> "Document"
@@ -179,16 +196,14 @@ fun setPhoneNumber(textView: TextView, phoneNumber: String?) {
 @BindingAdapter("file")
 fun setFile(view: ImageView, stringFiles: String?) {
     if (stringFiles != null) {
-        val files = ArrayList<String>()
-        stringFiles.split(",").forEach {
-            if (it.length > 3) {
-                files.add(it)
-            }
-        }
+
+        val files = stringFiles.toArrayList()
+
         when (view.id) {
             R.id.first -> {
                 if (files.isNotEmpty() && files[0].isNotEmpty()) {
                     view.loadFile(files[0])
+                    view.visible()
                 } else {
                     view.gone()
                 }
@@ -196,6 +211,7 @@ fun setFile(view: ImageView, stringFiles: String?) {
             R.id.second -> {
                 if (files.size > 1) {
                     view.loadFile(files[1])
+                    view.visible()
                 } else {
                     view.gone()
                 }
@@ -203,6 +219,7 @@ fun setFile(view: ImageView, stringFiles: String?) {
             R.id.third -> {
                 if (files.size > 2) {
                     view.loadFile(files[2])
+                    view.visible()
                 } else {
                     view.gone()
                 }
@@ -210,6 +227,7 @@ fun setFile(view: ImageView, stringFiles: String?) {
             R.id.fourth -> {
                 if (files.size > 3) {
                     view.loadFile(files[3])
+                    view.visible()
                 } else {
                     view.gone()
                 }
@@ -217,6 +235,7 @@ fun setFile(view: ImageView, stringFiles: String?) {
             R.id.fifth -> {
                 if (files.size > 4) {
                     view.loadFile(files[4])
+                    view.visible()
                 } else {
                     view.gone()
                 }
@@ -224,6 +243,7 @@ fun setFile(view: ImageView, stringFiles: String?) {
             R.id.sixth -> {
                 if (files.size > 5) {
                     view.loadFile(files[5])
+                    view.visible()
                 } else {
                     view.gone()
                 }
@@ -231,6 +251,7 @@ fun setFile(view: ImageView, stringFiles: String?) {
             R.id.seventh -> {
                 if (files.size > 6) {
                     view.loadFile(files[6])
+                    view.visible()
                 } else {
                     view.gone()
                 }
@@ -238,6 +259,7 @@ fun setFile(view: ImageView, stringFiles: String?) {
             R.id.eighth -> {
                 if (files.size > 7) {
                     view.loadFile(files[7])
+                    view.visible()
                 } else {
                     view.gone()
                 }

@@ -15,11 +15,9 @@ class ChatListAdapter(private val viewModel: ChatViewModel) :
     private val items = ArrayList<TdApi.Chat>()
 
     fun fetchList(newList: List<TdApi.Chat>) {
-        val callback = ChatDiffCallback(newList, items)
-        val diff = DiffUtil.calculateDiff(callback)
         items.clear()
         items.addAll(newList)
-        diff.dispatchUpdatesTo(this)
+       notifyDataSetChanged()
     }
 
     inner class ChatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

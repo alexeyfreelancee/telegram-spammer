@@ -9,15 +9,23 @@ import android.net.ConnectivityManager
 import android.os.Build
 import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.Fragment
+import com.example.telegramspam.R
 import com.google.android.material.snackbar.Snackbar
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.ArrayList
 
-
+fun String?.toArrayList():ArrayList<String>{
+    val resultList = ArrayList<String>()
+    this?.split(",")?.forEach {
+        if(it.length > 5) resultList.add(it)
+    }
+    return resultList
+}
 fun log(vararg messages: Any?) {
     messages.forEach { msg ->
         if (msg != null) {
@@ -64,6 +72,9 @@ fun Context.copyToClipboard(string: String) {
     log(string)
 }
 
+fun ImageView.empty(){
+    this.setBackgroundColor(this.context.resources.getColor(R.color.darkerGrey))
+}
 fun View.gone(){
     this.visibility = View.GONE
 }

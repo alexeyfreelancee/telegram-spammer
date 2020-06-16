@@ -6,8 +6,7 @@ import com.example.telegramspam.SOCKS5
 import com.example.telegramspam.models.*
 import com.example.telegramspam.utils.log
 import com.example.telegramspam.utils.removeEmpty
-import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.*
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 import java.io.File
@@ -18,28 +17,21 @@ object TelegramClientUtil {
     private val clients = HashMap<String, Client?>()
 
     suspend fun downloadFile(id: Int?): File? {
-
         if (id == null) return null
         val values = clients.values.toTypedArray()
         val client = values[Random().nextInt(values.size)] ?: return null
         return suspendCancellableCoroutine { continuation ->
-            client.setUpdatesHandler {
-                if (it is TdApi.UpdateFile) {
-                    log(it)
-                    if(!it.file.local.path.isNullOrEmpty()){
-                        continuation.resume(File(it.file.local.path)) {}
-                    }
-
-                }
-            }
             client.send(TdApi.DownloadFile(id, 32, 0, 0, false)) {
-                if (it is TdApi.Error) {
+                if (it is TdApi.File) {
+                    if (!it.local.path.isNullOrEmpty()) {
+                        continuation.resume(File(it.local.path)) {}
+                    } else{
+                       CoroutineScope(Dispatchers.IO).launch {  continuation.resume(downloadFile(id)){} }
+                    }
+                } else{
                     continuation.resume(null) {}
-                } else if (it is TdApi.File){
-                   if(!it.local.path.isNullOrEmpty()){
-                       continuation.resume(File(it.local.path)) {}
-                   }
                 }
+
 
             }
         }
