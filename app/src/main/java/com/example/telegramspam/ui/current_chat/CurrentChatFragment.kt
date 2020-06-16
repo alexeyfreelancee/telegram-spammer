@@ -16,7 +16,7 @@ import com.example.telegramspam.FILE_ID
 import com.example.telegramspam.R
 import com.example.telegramspam.adapters.MessageListAdapter
 import com.example.telegramspam.databinding.CurrentChatFragmentBinding
-import com.example.telegramspam.ui.MainActivity
+import com.example.telegramspam.utils.log
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
@@ -74,13 +74,21 @@ class CurrentChatFragment : Fragment(), KodeinAware {
         binding?.messageList?.adapter = adapter
         binding?.messageList?.layoutManager = layoutManager
         viewModel.messages.observe(viewLifecycleOwner, Observer {
+
             adapter.fetchList(it)
-            scrollToBottom()
+        })
+        viewModel.scrollEvent.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                it.peekContent()
+                scrollToBottom()
+            }
         })
     }
 
     private fun scrollToBottom() {
-        layoutManager.scrollToPosition(adapter.itemCount - 1)
+        if(adapter.itemCount-layoutManager.findFirstVisibleItemPosition() < 10 || layoutManager.findFirstVisibleItemPosition() == -1){
+            layoutManager.scrollToPosition(adapter.itemCount - 1)
+        }
     }
 
 

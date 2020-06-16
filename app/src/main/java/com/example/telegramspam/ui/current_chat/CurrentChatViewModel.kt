@@ -3,12 +3,14 @@ package com.example.telegramspam.ui.current_chat
 import androidx.lifecycle.*
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.models.Event
+import com.example.telegramspam.utils.log
 import kotlinx.coroutines.launch
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 
 class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
     private val _messages = MutableLiveData<List<TdApi.Message>>()
+    val scrollEvent = MutableLiveData<Event<Unit>>()
     val messages: LiveData<List<TdApi.Message>> = _messages
     val openPhoto = MutableLiveData<Event<Int?>>()
     val message = MutableLiveData("")
@@ -20,11 +22,12 @@ class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
     var accountId: Int = 0
 
 
-    private fun loadMessages(firstLoad: Boolean = false) {
+    private fun loadMessages(firstLoad: Boolean = false, scrollToBottom:Boolean = false) {
         viewModelScope.launch {
             if(firstLoad) dataLoading.value = true
            _messages.value = repository.loadMessages(chatId,accountId)
             if(firstLoad) dataLoading.value = false
+            if(scrollToBottom) scrollEvent.value = Event(Unit)
         }
     }
 
@@ -52,7 +55,7 @@ class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
             opponent.value = repository.getUser(chatId, accountId)
             val client = repository.provideClient(accountId)
             client?.setUpdatesHandler(updatesHandler)
-            loadMessages(true)
+            loadMessages(firstLoad = true,scrollToBottom = true)
         }
 
     }
@@ -70,12 +73,12 @@ class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
         viewModelScope.launch {
             opponent.value = repository.getUser(chatId, accountId)
         }
-
         when (update.constructor) {
+            TdApi.UpdateDeleteMessages.CONSTRUCTOR -> loadMessages()
             TdApi.UpdateMessageEdited.CONSTRUCTOR -> loadMessages()
-            TdApi.UpdateMessageSendSucceeded.CONSTRUCTOR -> loadMessages()
+            TdApi.UpdateMessageSendSucceeded.CONSTRUCTOR -> loadMessages(scrollToBottom = true)
             TdApi.UpdateChatLastMessage.CONSTRUCTOR -> loadMessages()
-            TdApi.UpdateNewMessage.CONSTRUCTOR -> loadMessages()
+            TdApi.UpdateNewMessage.CONSTRUCTOR -> loadMessages(scrollToBottom = true)
         }
     }
 }

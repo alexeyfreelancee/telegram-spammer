@@ -21,7 +21,6 @@ import kotlinx.coroutines.withContext
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 import java.io.File
-import java.lang.Exception
 
 
 class Repository(
