@@ -121,7 +121,7 @@ class CurrentChatViewModel(private val repository: Repository) : ViewModel() {
             }
             is TdApi.UpdateNewMessage -> {
 
-                loadMessages(scrollToBottom = true)
+                loadMessages()
             }
         }
     }

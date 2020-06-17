@@ -25,6 +25,7 @@
             android:id="@+id/message_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+
             android:layout_alignParentEnd="true"
             android:background="@drawable/msg_back"
             android:elevation="8dp"

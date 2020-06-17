@@ -103,7 +103,7 @@ class Repository(
                         break
                     }
                 }
-                return@withContext resultList.reversed()
+                return@withContext resultList
             }
             emptyList<TdApi.Message>()
         }
