@@ -3,13 +3,14 @@ package com.example.telegramspam.utils
 import android.view.View
 import android.widget.*
 import android.widget.AdapterView.OnItemSelectedListener
+import androidx.cardview.widget.CardView
 import androidx.databinding.BindingAdapter
 import androidx.databinding.InverseBindingAdapter
 import androidx.databinding.InverseBindingListener
 import com.bumptech.glide.Glide
 import com.example.telegramspam.R
 import com.example.telegramspam.data.telegram.TelegramClientUtil
-import com.example.telegramspam.models.Account
+import com.example.telegramspam.models.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,8 +20,46 @@ import java.io.File
 import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
+
+@BindingAdapter("newMessages")
+fun setNewMessages(view:TextView, account:Account?){
+    if(account!=null){
+        CoroutineScope(Dispatchers.IO).launch {
+            val client = TelegramClientUtil.provideClient(account)
+            if(client is ClientCreateResult.Success){
+                val chats = TelegramClientUtil.loadChats(client.client)
+                if(chats is GetChatsResult.Success){
+                    var count = 0
+                    val normalChats = ArrayList<TdApi.Chat>()
+                    chats.chats.chatIds.forEach {
+                        val normalChat = TelegramClientUtil.getChat(client.client, it)
+                        if(normalChat is GetChat.Success){
+                            normalChats.add(normalChat.chat)
+                        }
+                    }
+                    normalChats.forEach {
+                        count+=it.unreadCount
+                    }
+                    withContext(Dispatchers.Main){
+                        if(count==0)view.gone()else view.visible()
+                        view.text = "Непрочитанных сообщений: $count"
+                    }
+                }
+            }
+
+
+        }
+
+
+    }
+}
+@BindingAdapter("unreadCount")
+fun setUnreadCount(view: TextView, count: Int?){
+    if(count!=null){
+        view.text = "$count"
+    }
+}
 @BindingAdapter("voice")
 fun checkVoice(view: ImageView, content: TdApi.MessageContent?){
     if(content is TdApi.MessageVoiceNote){

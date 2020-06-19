@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.telegramspam.databinding.ChatRowBinding
 import com.example.telegramspam.ui.chats.ChatViewModel
+import com.example.telegramspam.utils.gone
+import com.example.telegramspam.utils.visible
 import org.drinkless.td.libcore.telegram.TdApi
 
 class ChatListAdapter(private val viewModel: ChatViewModel) :
@@ -22,9 +24,14 @@ class ChatListAdapter(private val viewModel: ChatViewModel) :
 
     inner class ChatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(chat: TdApi.Chat) {
-            DataBindingUtil.bind<ChatRowBinding>(itemView)?.apply {
+            val binding = DataBindingUtil.bind<ChatRowBinding>(itemView)?.apply {
                 viewmodel = viewModel
                 this.chat = chat
+            }
+            if(chat.unreadCount == 0){
+                binding?.newMessage?.gone()
+            } else{
+                binding?.newMessage?.visible()
             }
         }
     }
@@ -41,22 +48,3 @@ class ChatListAdapter(private val viewModel: ChatViewModel) :
     }
 }
 
-class ChatDiffCallback(
-    private val newList: List<TdApi.Chat>,
-    private val oldList: List<TdApi.Chat>
-) : DiffUtil.Callback() {
-
-    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return newList[newItemPosition].id == oldList[oldItemPosition].id
-    }
-
-    override fun getOldListSize(): Int = oldList.size
-    override fun getNewListSize(): Int = newList.size
-
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        val old = oldList[oldItemPosition]
-        val new = newList[newItemPosition]
-        return old.lastMessage?.date == new.lastMessage?.date && old.title == new.title && old.unreadCount == new.unreadCount
-    }
-
-}

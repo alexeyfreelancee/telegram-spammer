@@ -50,6 +50,11 @@ fun List<String>.removeEmpty() : List<String>{
 fun View.toast(msg: String) {
     Snackbar.make(this, msg, 1500).show()
 }
+fun Activity.connected() : Boolean{
+    val connectivityManager =
+        this.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    return connectivityManager.activeNetworkInfo != null && connectivityManager.activeNetworkInfo.isConnected
+}
 
 fun connected(view: View) : Boolean{
     val context = view.context
@@ -84,24 +89,3 @@ fun View.visible(){
 }
 
 
-fun Activity.checkStoragePermission(): Boolean {
-    if (
-        ActivityCompat.checkSelfPermission(
-            this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-        ) != PackageManager.PERMISSION_GRANTED
-    ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(
-                this,
-                arrayOf(
-                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ),
-                1234
-            )
-        }
-        return false
-    } else {
-        return true
-    }
-}
