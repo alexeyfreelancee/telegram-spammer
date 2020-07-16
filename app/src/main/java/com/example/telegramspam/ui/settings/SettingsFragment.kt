@@ -16,7 +16,7 @@ import com.example.telegramspam.R
 import com.example.telegramspam.SETTINGS
 import com.example.telegramspam.databinding.SettingsFragmentBinding
 import com.example.telegramspam.models.Account
-import com.example.telegramspam.models.Settings
+import com.example.telegramspam.models.AccountSettings
 import com.example.telegramspam.services.ParserService
 import com.example.telegramspam.utils.*
 import com.google.gson.Gson
@@ -71,7 +71,7 @@ class SettingsFragment : Fragment(), KodeinAware {
             }
         })
 
-        viewModel.settings.observe(viewLifecycleOwner, Observer {
+        viewModel.accountSettings.observe(viewLifecycleOwner, Observer {
             when (it.maxOnlineDifference) {
                 (60 * 60).toLong() -> binding.spinner.setSelection(1)
                 ((60 * 60) / 2).toLong() -> binding.spinner.setSelection(2)
@@ -86,7 +86,7 @@ class SettingsFragment : Fragment(), KodeinAware {
     }
 
     private fun startParserService(hashMap: HashMap<String, Any>){
-        val settings = hashMap[SETTINGS] as Settings
+        val settings = hashMap[SETTINGS] as AccountSettings
         val account = hashMap[ACCOUNT] as Account
         val intent = Intent(requireContext(), ParserService::class.java).apply {
             putExtra(ACCOUNT, Gson().toJson(account))

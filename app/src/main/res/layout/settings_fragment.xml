@@ -43,7 +43,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:maxHeight="200dp"
-                            android:text="@={viewmodel.settings.chats}" />
+                            android:text="@={viewmodel.accountSettings.chats}" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -58,7 +58,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:maxHeight="200dp"
-                            android:text="@={viewmodel.settings.message}" />
+                            android:text="@={viewmodel.accountSettings.message}" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -73,7 +73,7 @@
                             android:layout_height="wrap_content"
                             android:inputType="number"
                             android:maxHeight="200dp"
-                            android:text="@={viewmodel.settings.delay}" />
+                            android:text="@={viewmodel.accountSettings.delay}" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -81,7 +81,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:checked="@={viewmodel.settings.havePhoto}"
+                        android:checked="@={viewmodel.accountSettings.havePhoto}"
                         android:text="@string/have_photo"
                         android:textSize="18sp" />
 
@@ -89,7 +89,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:checked="@={viewmodel.settings.hiddenStatus}"
+                        android:checked="@={viewmodel.accountSettings.hiddenStatus}"
                         android:text="@string/hidden_status"
                         android:textSize="18sp" />
 
@@ -97,7 +97,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:checked="@={viewmodel.settings.block}"
+                        android:checked="@={viewmodel.accountSettings.block}"
                         android:text="@string/block"
                         android:textSize="18sp" />
 

@@ -16,10 +16,9 @@ import com.example.telegramspam.databinding.CurrentAccountFragmentBinding
 import com.example.telegramspam.ui.dialogs.ProxyDialog
 
 import com.example.telegramspam.models.Account
-import com.example.telegramspam.models.Settings
+import com.example.telegramspam.models.AccountSettings
 import com.example.telegramspam.services.SpammerService
 import com.example.telegramspam.ui.MainActivity
-import com.example.telegramspam.utils.log
 import com.example.telegramspam.utils.toast
 import com.google.gson.Gson
 import org.kodein.di.KodeinAware
@@ -73,7 +72,7 @@ class CurrentAccountFragment : Fragment(), KodeinAware{
 
     private fun startSpammerService(data: HashMap<String, Any>){
         val intent = Intent(requireContext(), SpammerService::class.java)
-        val settings = Gson().toJson(data[SETTINGS] as Settings)
+        val settings = Gson().toJson(data[SETTINGS] as AccountSettings)
         val account = Gson().toJson(data[ACCOUNT] as Account)
         intent.putExtra(SETTINGS, settings)
         intent.putExtra(ACCOUNT, account)

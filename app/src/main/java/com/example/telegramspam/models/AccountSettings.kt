@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "settings_table")
-data class Settings(
+data class AccountSettings(
     @PrimaryKey
     var dbPath: String = "",
     var maxOnlineDifference: Long = 0,

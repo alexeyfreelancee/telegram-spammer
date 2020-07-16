@@ -83,4 +83,14 @@
             app:popUpToInclusive="true"
             app:popUpTo="@id/loginFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/inviterFragment"
+        android:name="com.example.telegramspam.ui.inviter.InviterFragment"
+        android:label="inviter_fragment"
+        tools:layout="@layout/inviter_fragment" />
+    <fragment
+        android:id="@+id/joinerFragment"
+        android:name="com.example.telegramspam.ui.joiner.JoinerFragment"
+        android:label="joiner_fragment"
+        tools:layout="@layout/joiner_fragment" />
 </navigation>

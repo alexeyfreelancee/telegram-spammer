@@ -11,6 +11,7 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.navigation.Navigation
 import com.example.telegramspam.R
 import com.example.telegramspam.utils.*
 import com.google.firebase.database.DataSnapshot
@@ -60,14 +61,24 @@ class MainActivity : AppCompatActivity() {
 
     }
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.info) {
-            object : Dialog(this) {
-                override fun onCreate(savedInstanceState: Bundle?) {
-                    super.onCreate(savedInstanceState)
-                    setContentView(R.layout.dialog_info)
-                }
-            }.show()
+        val navController = Navigation.findNavController(this, R.id.nav_host_fragment)
+        when(item.itemId){
+            R.id.info ->{
+                object : Dialog(this) {
+                    override fun onCreate(savedInstanceState: Bundle?) {
+                        super.onCreate(savedInstanceState)
+                        setContentView(R.layout.dialog_info)
+                    }
+                }.show()
+            }
+            R.id.inviter ->{
+                navController.navigate(R.id.inviterFragment)
+            }
+            R.id.joiner ->{
+                navController.navigate(R.id.joinerFragment)
+            }
         }
+
         return true
     }
 

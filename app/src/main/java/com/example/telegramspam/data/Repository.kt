@@ -27,7 +27,36 @@ class Repository(
     private val mediaPlayer: MediaPlayer,
     private val prefs: SharedPrefsHelper
 ) {
+    fun accountDeselectedJoiner(account:Account){
+        CoroutineScope(Dispatchers.IO).launch {
+            account.joinerSelected = false
+            db.accountsDao().insert(account)
+        }
 
+    }
+    fun accountSelectedJoiner(account:Account){
+        CoroutineScope(Dispatchers.IO).launch {
+            account.joinerSelected = true
+            db.accountsDao().insert(account)
+        }
+
+    }
+    suspend fun loadJoinerSettings():JoinerSettings?{
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext){
+            log("${ db.joinerSettingsDao().loadSettings("settings")}")
+            db.joinerSettingsDao().loadSettings("settings")
+
+        }
+
+    }
+    fun saveJoinerSettings(groups:String, accounts:String, delay:String){
+        CoroutineScope(Dispatchers.IO).launch {
+            val settings = JoinerSettings(groups = groups, accounts = accounts, delay = delay.toInt())
+            db.joinerSettingsDao().saveSettings(settings)
+            log(settings)
+        }
+
+    }
     fun checkRegisterData(login: String, password: String): Boolean {
         val correctLogin = prefs.getLogin()
         val correctPassword = prefs.getPassword()
@@ -180,10 +209,10 @@ class Repository(
 
     }
 
-    fun removeFile(position: Int, settings: Settings?): String {
-        return if (settings != null) {
+    fun removeFile(position: Int, accountSettings: AccountSettings?): String {
+        return if (accountSettings != null) {
             val files = ArrayList<String>()
-            settings.files.split(",").forEach {
+            accountSettings.files.split(",").forEach {
                 if (it.length > 3) files.add(it)
             }
             val result = java.lang.StringBuilder()
@@ -198,13 +227,13 @@ class Repository(
         }
     }
 
-    fun checkSettings(settings: Settings?, beforeSpam: Boolean): Boolean {
-        if (settings != null) {
+    fun checkSettings(accountSettings: AccountSettings?, beforeSpam: Boolean): Boolean {
+        if (accountSettings != null) {
             return if (beforeSpam) {
-                val chats = settings.chats.split(",").removeEmpty()
-                settings.delay.isNotEmpty() && settings.message.isNotEmpty() && chats.isNotEmpty()
+                val chats = accountSettings.chats.split(",").removeEmpty()
+                accountSettings.delay.isNotEmpty() && accountSettings.message.isNotEmpty() && chats.isNotEmpty()
             } else {
-                val chats = settings.chats.split(",")
+                val chats = accountSettings.chats.split(",")
                 return chats.isNotEmpty() && chats[0].startsWith("@") && chats[0].length > 1
             }
         }
@@ -229,16 +258,16 @@ class Repository(
         return result.toString().dropLast(1)
     }
 
-    suspend fun loadSettings(dbPath: String): Settings? {
+    suspend fun loadSettings(dbPath: String): AccountSettings? {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            db.settingsDao().loadByPath(dbPath)
+            db.accountSettingsDao().loadByPath(dbPath)
         }
     }
 
-    suspend fun saveSettings(settings: Settings) {
+    suspend fun saveSettings(accountSettings: AccountSettings) {
         CoroutineScope(Dispatchers.IO).launch {
-            log("settings saved $settings")
-            db.settingsDao().insert(settings)
+            log("settings saved $accountSettings")
+            db.accountSettingsDao().insert(accountSettings)
         }
     }
 
@@ -259,8 +288,13 @@ class Repository(
             db.accountsDao().loadById(accountId)
         }
     }
+    suspend fun loadAccounts(): List<Account>{
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext){
+            db.accountsDao().loadAll()
+        }
+    }
 
-    fun loadAccounts(): LiveData<List<Account>> = db.accountsDao().loadAllAsync()
+    fun loadAccountsAsync(): LiveData<List<Account>> = db.accountsDao().loadAllAsync()
 
     fun updateProxy(
         proxyIp: String,

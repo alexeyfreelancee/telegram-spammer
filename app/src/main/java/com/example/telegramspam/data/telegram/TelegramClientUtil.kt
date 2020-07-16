@@ -16,6 +16,15 @@ import kotlin.collections.HashMap
 object TelegramClientUtil {
     private val clients = HashMap<String, Client?>()
 
+    suspend fun joinGroup(client: Client?, groupId:Int): Boolean?{
+
+        return suspendCancellableCoroutine { continuation->
+
+            continuation.resume(true){}
+            continuation.resume(null){}
+        }
+    }
+
     suspend fun downloadFile(id: Int?): File? {
         if (id == null) return null
         val values = clients.values.toTypedArray()
@@ -248,12 +257,12 @@ object TelegramClientUtil {
     }
 
     fun checkUserBySettings(
-        user: TdApi.User, settings: Settings
+        user: TdApi.User, accountSettings: AccountSettings
     ): Boolean {
-        if (user.profilePhoto != null == settings.havePhoto) {
-            if (checkOnline(user.status, settings.maxOnlineDifference)) {
+        if (user.profilePhoto != null == accountSettings.havePhoto) {
+            if (checkOnline(user.status, accountSettings.maxOnlineDifference)) {
                 val emptyStatus = user.status.constructor == TdApi.UserStatusEmpty.CONSTRUCTOR
-                if (emptyStatus == settings.hiddenStatus) {
+                if (emptyStatus == accountSettings.hiddenStatus) {
                     return true
                 }
             }
@@ -396,6 +405,8 @@ object TelegramClientUtil {
             }
         }
     }
+
+
 
     suspend fun getChat(client: Client?, link: String): GetChatResult {
         return suspendCancellableCoroutine { continuation ->

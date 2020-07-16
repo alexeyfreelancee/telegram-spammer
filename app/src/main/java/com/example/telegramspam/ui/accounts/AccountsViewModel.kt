@@ -12,7 +12,7 @@ import com.example.telegramspam.utils.connected
 import kotlinx.coroutines.launch
 
 class AccountsViewModel(private val repository: Repository) : ViewModel() {
-    val accounts = repository.loadAccounts()
+    val accounts = repository.loadAccountsAsync()
 
     val openAccount = MutableLiveData<Event<Int>>()
     val addAccount = MutableLiveData<Event<String>>()

@@ -59,7 +59,7 @@ class ParserService : Service() {
                     val account =
                         Gson().fromJson(intent.getStringExtra(ACCOUNT), Account::class.java)
                     val settings =
-                        Gson().fromJson(intent.getStringExtra(SETTINGS), Settings::class.java)
+                        Gson().fromJson(intent.getStringExtra(SETTINGS), AccountSettings::class.java)
 
 
                     when (val result = TelegramClientUtil.provideClient(account)) {
@@ -93,7 +93,7 @@ class ParserService : Service() {
 
     private fun startParse(
         phone: String,
-        settings: Settings,
+        accountSettings: AccountSettings,
         notificationId: Int,
         client:Client
     ) = CoroutineScope(Dispatchers.IO).launch {
@@ -117,7 +117,7 @@ class ParserService : Service() {
             val chats = HashSet<TdApi.ChatTypeSupergroup>()
 
 
-            settings.chats.split(",").forEach { link ->
+            accountSettings.chats.split(",").forEach { link ->
                 if (link.length > 3) {
                     when(val result = TelegramClientUtil.getChat(client, link)){
                         is GetChatResult.Success -> chats.add(result.chat)
@@ -167,7 +167,7 @@ class ParserService : Service() {
 
             log("total users in chats ${users.size}")
             users.forEach { user ->
-                if (TelegramClientUtil.checkUserBySettings(user, settings)) {
+                if (TelegramClientUtil.checkUserBySettings(user, accountSettings)) {
                     log(user.username)
                     resultList.add(user.username)
                 }

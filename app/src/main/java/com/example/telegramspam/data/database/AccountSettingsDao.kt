@@ -4,14 +4,14 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.example.telegramspam.models.Settings
+import com.example.telegramspam.models.AccountSettings
 
 @Dao
-interface SettingsDao {
+interface AccountSettingsDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(settings:Settings)
+    suspend fun insert(accountSettings:AccountSettings)
 
     @Query("SELECT * FROM settings_table WHERE dbPath LIKE :dbPath")
-    suspend fun loadByPath(dbPath:String) : Settings
+    suspend fun loadByPath(dbPath:String) : AccountSettings
 }

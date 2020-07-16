@@ -7,13 +7,13 @@ import androidx.lifecycle.*
 import com.example.telegramspam.*
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.models.Event
-import com.example.telegramspam.models.Settings
+import com.example.telegramspam.models.AccountSettings
 import com.example.telegramspam.utils.*
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(private val repository: Repository) : ViewModel() {
-    private val _settings = MutableLiveData<Settings>()
-    val settings: LiveData<Settings> get() = _settings
+    private val _settings = MutableLiveData<AccountSettings>()
+    val accountSettings: LiveData<AccountSettings> get() = _settings
 
     val attachFile = MutableLiveData<Event<Any>>()
     val showGuide = MutableLiveData<Event<Any>>()
@@ -27,14 +27,14 @@ class SettingsViewModel(private val repository: Repository) : ViewModel() {
 
     fun loadSettings(dbPath: String) = viewModelScope.launch {
         this@SettingsViewModel.dbPath = dbPath
-        val settings = repository.loadSettings(dbPath) ?: Settings()
+        val settings = repository.loadSettings(dbPath) ?: AccountSettings()
         settings.dbPath = dbPath
         files.value = settings.files
         _settings.value = settings
     }
 
     fun saveSettings() = viewModelScope.launch {
-        val settings = settings.value
+        val settings = accountSettings.value
         val files = files.value
         if (settings != null) {
             settings.maxOnlineDifference = calculateMaxOnlineDiff()
@@ -53,15 +53,15 @@ class SettingsViewModel(private val repository: Repository) : ViewModel() {
     fun loadList(view: View) {
         if(connected(view)){
             viewModelScope.launch {
-                if (repository.checkSettings(settings.value, false)) {
+                if (repository.checkSettings(accountSettings.value, false)) {
                     val files = files.value
                     if (!files.isNullOrEmpty()) {
-                        settings.value?.files = files
+                        accountSettings.value?.files = files
                     }
-                    settings.value?.maxOnlineDifference = calculateMaxOnlineDiff()
+                    accountSettings.value?.maxOnlineDifference = calculateMaxOnlineDiff()
                     loadUsers.value = Event(
                         hashMapOf(
-                            SETTINGS to settings.value!!,
+                            SETTINGS to accountSettings.value!!,
                             ACCOUNT to repository.loadAccount(dbPath)
                         )
                     )
@@ -81,10 +81,10 @@ class SettingsViewModel(private val repository: Repository) : ViewModel() {
     }
 
     fun     fileAttached(data: Intent, context: Context) {
-        if (settings.value != null) {
+        if (accountSettings.value != null) {
             val filesString =
-                if (settings.value!!.files.isEmpty()) repository.loadFilePaths(data, context)
-                else "${settings.value?.files},${repository.loadFilePaths(data, context)}"
+                if (accountSettings.value!!.files.isEmpty()) repository.loadFilePaths(data, context)
+                else "${accountSettings.value?.files},${repository.loadFilePaths(data, context)}"
             val resultList = ArrayList<String>()
             filesString.split(",").forEach {
                 if (it.length > 3) {
@@ -96,7 +96,7 @@ class SettingsViewModel(private val repository: Repository) : ViewModel() {
                     Event("Максимум 8 файлов")
             } else {
                 log(resultList)
-                settings.value?.files = filesString
+                accountSettings.value?.files = filesString
                 files.value = filesString
             }
         }
@@ -104,9 +104,9 @@ class SettingsViewModel(private val repository: Repository) : ViewModel() {
 
 
     fun removeFile(position: Int) {
-        val list = repository.removeFile(position, settings.value)
+        val list = repository.removeFile(position, accountSettings.value)
 
-        settings.value?.files = list
+        accountSettings.value?.files = list
         files.value = list
     }
 

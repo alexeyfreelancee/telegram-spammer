@@ -59,7 +59,7 @@ class SpammerService : Service() {
             } else {
                 CoroutineScope(Dispatchers.IO).launch {
                     val settings =
-                        Gson().fromJson(intent.getStringExtra(SETTINGS), Settings::class.java)
+                        Gson().fromJson(intent.getStringExtra(SETTINGS), AccountSettings::class.java)
                     val account =
                         Gson().fromJson(intent.getStringExtra(ACCOUNT), Account::class.java)
 
@@ -87,7 +87,7 @@ class SpammerService : Service() {
     private fun startSpam(
         client:Client,
         phone: String,
-        settings: Settings,
+        accountSettings: AccountSettings,
         notificationId: Int
     ) = CoroutineScope(Dispatchers.IO).launch {
         clients.add(phone)
@@ -103,7 +103,7 @@ class SpammerService : Service() {
         val usersChecked = HashSet<TdApi.User>()
         val chats = HashSet<TdApi.ChatTypeSupergroup>()
 
-        settings.chats.split(",").forEach { link ->
+        accountSettings.chats.split(",").forEach { link ->
             if (link.length > 3) {
                 when (val result = TelegramClientUtil.getChat(client, link)) {
                     is GetChatResult.Success -> chats.add(result.chat)
@@ -147,7 +147,7 @@ class SpammerService : Service() {
 
         log("total users in chats ${usersNotChecked.size}")
         usersNotChecked.forEach { user ->
-            if (TelegramClientUtil.checkUserBySettings(user, settings)) {
+            if (TelegramClientUtil.checkUserBySettings(user, accountSettings)) {
                 usersChecked.add(user)
             }
         }
@@ -157,8 +157,8 @@ class SpammerService : Service() {
         var errorsCounter = 0
         for ((i, user) in usersChecked.withIndex()) {
             val name = "${user.firstName} ${user.lastName}".trim()
-            val photos = settings.files.split(",").removeEmpty()
-            val message = getRandomMessage(settings.message, name)
+            val photos = accountSettings.files.split(",").removeEmpty()
+            val message = getRandomMessage(accountSettings.message, name)
 
             val success = TelegramClientUtil.sendMessage(client,photos,message,user.id)
             if (success) {
@@ -168,10 +168,10 @@ class SpammerService : Service() {
                     "Sent ${i + 1}/${usersChecked.size} messages",
                     notificationId, stopCurrentIntent
                 )
-                if (settings.block) {
+                if (accountSettings.block) {
                     TelegramClientUtil.blockUser(client, user.id)
                 }
-                val delay = settings.delay.toInt() * 1000
+                val delay = accountSettings.delay.toInt() * 1000
                 delay(delay.toLong())
             } else {
                 errorsCounter++
