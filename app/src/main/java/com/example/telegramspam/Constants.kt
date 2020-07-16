@@ -27,4 +27,5 @@ const val ACCOUNT_ID = "dakjs;flkjas"
 const val CHAT_ID = "chat_id"
 const val FILE_ID = "file_id"
 
-
+const val EMAIL_LOGIN = "lehapobeditel228@gmail.com"
+const val EMAIL_PASS = "porolotboga"

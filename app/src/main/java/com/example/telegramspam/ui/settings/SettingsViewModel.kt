@@ -80,7 +80,7 @@ class SettingsViewModel(private val repository: Repository) : ViewModel() {
         attachFile.value = Event(Any())
     }
 
-    fun fileAttached(data: Intent, context: Context) {
+    fun     fileAttached(data: Intent, context: Context) {
         if (settings.value != null) {
             val filesString =
                 if (settings.value!!.files.isEmpty()) repository.loadFilePaths(data, context)

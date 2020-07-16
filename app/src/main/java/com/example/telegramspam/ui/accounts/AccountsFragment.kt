@@ -77,6 +77,12 @@ class AccountsFragment : Fragment(), KodeinAware {
                 toast(it.peekContent())
             }
         })
+        viewModel.startLoginActivity.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                it.peekContent()
+                navController.navigate(R.id.action_accountsFragment_to_loginFragment)
+            }
+        })
         viewModel.openAccount.observe(viewLifecycleOwner, Observer {
             if (!it.hasBeenHandled) {
                 val bundle = Bundle()

@@ -40,4 +40,8 @@
     </array>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="request_register">Запросить регистрацию</string>
+    <string name="enter">Войти</string>
+    <string name="login">Логин</string>
+    <string name="pass">Пароль</string>
 </resources>

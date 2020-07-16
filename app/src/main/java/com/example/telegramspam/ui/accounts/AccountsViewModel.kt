@@ -19,10 +19,21 @@ class AccountsViewModel(private val repository: Repository) : ViewModel() {
     val openDeleteDialog = MutableLiveData<Event<Int>>()
     val toast = MutableLiveData<Event<String>>()
 
+    val startLoginActivity = MutableLiveData<Event<String>>()
+
+    init {
+        checkRegistered()
+    }
     fun openDeleteDialog(id:Int){
         openDeleteDialog.value = Event(id)
     }
 
+    private fun checkRegistered() {
+        val registered = repository.checkRegistered()
+        if(!registered){
+            startLoginActivity.value = Event("")
+        }
+    }
     fun deleteAccount(id:Int) = viewModelScope.launch{
         repository.deleteAccount(id)
     }

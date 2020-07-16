@@ -11,6 +11,7 @@ import com.example.telegramspam.data.telegram.TelegramAuthUtil
 import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.models.*
 import com.example.telegramspam.utils.*
+import com.example.telegramspam.utils.email_sender.GMailSender
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,8 +24,44 @@ import java.io.File
 class Repository(
     private val db: AppDatabase,
     private val authUtil: TelegramAuthUtil,
-    private val mediaPlayer: MediaPlayer
+    private val mediaPlayer: MediaPlayer,
+    private val prefs: SharedPrefsHelper
 ) {
+
+    fun checkRegisterData(login: String, password: String): Boolean {
+        val correctLogin = prefs.getLogin()
+        val correctPassword = prefs.getPassword()
+
+        return if(correctLogin == login && correctPassword == password){
+            prefs.setRegistered()
+            true
+        }else{
+            false
+        }
+    }
+
+    fun sendPasswordEmail(login: String) {
+        val password = PasswordGenerator.PasswordGeneratorBuilder()
+            .useDigits(true)
+            .useLower(true)
+            .useUpper(false)
+            .usePunctuation(false)
+            .build()
+            .generate(8)
+        prefs.savePassword(password)
+        prefs.saveLogin(login)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            GMailSender().sendMail(login, password)
+        }
+
+    }
+
+    fun checkRegistered(): Boolean {
+        return prefs.checkRegistered()
+    }
+
+
 
     fun playVoice(file: File) {
         if (file.exists()) {
@@ -132,8 +169,8 @@ class Repository(
 
     }
 
-    fun removeFile(position: Int, files:String?):String{
-        return if(files!=null){
+    fun removeFile(position: Int, files: String?): String {
+        return if (files != null) {
             val first = files.toArrayList()
             first.removeAt(position)
             val result = java.lang.StringBuilder()
@@ -142,6 +179,7 @@ class Repository(
         } else ""
 
     }
+
     fun removeFile(position: Int, settings: Settings?): String {
         return if (settings != null) {
             val files = ArrayList<String>()

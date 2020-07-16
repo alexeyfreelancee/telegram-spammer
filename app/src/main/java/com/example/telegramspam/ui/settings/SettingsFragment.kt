@@ -30,6 +30,7 @@ class SettingsFragment : Fragment(), KodeinAware {
     private lateinit var binding: SettingsFragmentBinding
     private lateinit var viewModel: SettingsViewModel
     private val factory by instance<SettingsViewModelFactory>()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
