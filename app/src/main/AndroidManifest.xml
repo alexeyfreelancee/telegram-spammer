@@ -23,6 +23,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name=".services.InviterService"
+            android:exported="true"
+            android:enabled="true"/>
         <service android:name=".services.JoinerService"
             android:exported="true"
             android:enabled="true"/>

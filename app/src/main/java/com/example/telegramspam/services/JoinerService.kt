@@ -20,7 +20,6 @@ class JoinerService : Service() {
     private val STOP_ALL = "com.example.telegramspam.services.STOP_ALL_JOINER"
 
 
-
     private fun generateStopAll(): Intent {
         val stopIntent = Intent(this@JoinerService, JoinerService::class.java)
         stopIntent.action = STOP_ALL
@@ -90,14 +89,9 @@ class JoinerService : Service() {
             when (val result = TelegramClientUtil.provideClient(account)) {
                 is ClientCreateResult.Success -> {
                     val client = result.client
-
                     clients.add(account.phoneNumber)
-
                     groups.forEach { groupId ->
-
-//                            val successJoin =
-//                                TelegramClientUtil.joinGroup(client, group.id)
-                        success++
+                        if (TelegramClientUtil.joinGroup(client, groupId)) success++ else errors++
                     }
                 }
                 is ClientCreateResult.Error -> {

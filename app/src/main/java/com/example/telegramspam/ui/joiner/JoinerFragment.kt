@@ -14,6 +14,7 @@ import com.example.telegramspam.adapters.SelectAccsAdapter
 import com.example.telegramspam.databinding.JoinerFragmentBinding
 import com.example.telegramspam.models.JoinerSettings
 import com.example.telegramspam.services.JoinerService
+import com.example.telegramspam.utils.toast
 import com.google.gson.Gson
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
@@ -39,6 +40,11 @@ class JoinerFragment : Fragment(),KodeinAware {
         viewModel.startJoiner.observe(viewLifecycleOwner, Observer {
             if(!it.hasBeenHandled){
                 startJoiner(it.peekContent())
+            }
+        })
+        viewModel.toast.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                toast(it.peekContent())
             }
         })
 

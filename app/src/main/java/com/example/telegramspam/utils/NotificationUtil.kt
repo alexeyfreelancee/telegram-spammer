@@ -33,7 +33,7 @@ fun createNotificationChannels(context: Context) {
     }
 }
 
-fun Context.sendFinishInviter(   success:Int, errors:Int) {
+fun Context.sendNotificationInviter(   success:Int, errors:Int) {
     val notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     val notification = NotificationCompat.Builder(this, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_app)

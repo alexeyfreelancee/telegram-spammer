@@ -6,10 +6,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.telegramspam.NO_INTERNET
 import com.example.telegramspam.data.Repository
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.Event
 import com.example.telegramspam.models.JoinerSettings
+import com.example.telegramspam.utils.connected
 import com.example.telegramspam.utils.log
 import com.example.telegramspam.utils.toArrayList
 import com.google.gson.Gson
@@ -24,6 +26,7 @@ class JoinerViewModel(private val repository: Repository) : ViewModel() {
 
     val dbAccounts = repository.loadAccountsAsync()
     val startJoiner = MutableLiveData<Event<JoinerSettings>>()
+    val toast = MutableLiveData<Event<String>>()
 
     fun accountSelected(view: View, account:Account){
         val checkBox = view as CheckBox
@@ -52,13 +55,23 @@ class JoinerViewModel(private val repository: Repository) : ViewModel() {
 
 
     fun startJoiner(view:View) {
-        val joinerSettings = JoinerSettings(
-            groups = groups.value ?: "",
-            accounts = accounts.value ?: "",
-            delay = delay.value!!.toInt()
-        )
-        saveSettings()
-        startJoiner.value = Event(joinerSettings)
+        if(connected(view)){
+            if(accounts.value!!.isNotBlank() && groups.value!!.isNotBlank() && delay.value!!.isNotBlank()){
+                val joinerSettings = JoinerSettings(
+                    groups = groups.value ?: "",
+                    accounts = accounts.value ?: "",
+                    delay = delay.value!!.toInt()
+                )
+                saveSettings()
+                startJoiner.value = Event(joinerSettings)
+            } else{
+                toast.value = Event("Заполните все поля")
+            }
+        } else{
+            toast.value = Event(NO_INTERNET)
+        }
+
+
     }
 
     fun saveSettings() {

@@ -12,6 +12,7 @@ import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.models.*
 import com.example.telegramspam.utils.*
 import com.example.telegramspam.utils.email_sender.GMailSender
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,44 +28,72 @@ class Repository(
     private val mediaPlayer: MediaPlayer,
     private val prefs: SharedPrefsHelper
 ) {
-    fun accountDeselectedJoiner(account:Account){
+    suspend fun checkInviteFrom(inviteFrom: String):Boolean{
+        val account = loadAccountByUsername(inviteFrom)
+        return account != null
+    }
+    suspend fun loadInviterSettings(): InviterSettings? {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            db.inviterSettingsDao().loadSettings()
+        }
+    }
+
+    fun saveInviterSettings(accounts: String, groups: String, delay: String, inviteFrom: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val account = loadAccountByUsername(inviteFrom)
+            val settings = InviterSettings(
+                accounts = accounts,
+                chat = groups,
+                delay = delay.toInt(),
+                inviteFrom = Gson().toJson(account)
+            )
+            db.inviterSettingsDao().saveSettings(settings)
+        }
+    }
+
+    fun accountDeselectedJoiner(account: Account) {
         CoroutineScope(Dispatchers.IO).launch {
             account.joinerSelected = false
             db.accountsDao().insert(account)
         }
 
     }
-    fun accountSelectedJoiner(account:Account){
+
+    fun accountSelectedJoiner(account: Account) {
         CoroutineScope(Dispatchers.IO).launch {
             account.joinerSelected = true
             db.accountsDao().insert(account)
         }
 
     }
-    suspend fun loadJoinerSettings():JoinerSettings?{
-        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext){
-            log("${ db.joinerSettingsDao().loadSettings("settings")}")
+
+    suspend fun loadJoinerSettings(): JoinerSettings? {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            log("${db.joinerSettingsDao().loadSettings("settings")}")
             db.joinerSettingsDao().loadSettings("settings")
 
         }
 
     }
-    fun saveJoinerSettings(groups:String, accounts:String, delay:String){
+
+    fun saveJoinerSettings(groups: String, accounts: String, delay: String) {
         CoroutineScope(Dispatchers.IO).launch {
-            val settings = JoinerSettings(groups = groups, accounts = accounts, delay = delay.toInt())
+            val settings =
+                JoinerSettings(groups = groups, accounts = accounts, delay = delay.toInt())
             db.joinerSettingsDao().saveSettings(settings)
             log(settings)
         }
 
     }
+
     fun checkRegisterData(login: String, password: String): Boolean {
         val correctLogin = prefs.getLogin()
         val correctPassword = prefs.getPassword()
 
-        return if(correctLogin == login && correctPassword == password){
+        return if (correctLogin == login && correctPassword == password) {
             prefs.setRegistered()
             true
-        }else{
+        } else {
             false
         }
     }
@@ -89,7 +118,6 @@ class Repository(
     fun checkRegistered(): Boolean {
         return prefs.checkRegistered()
     }
-
 
 
     fun playVoice(file: File) {
@@ -283,13 +311,20 @@ class Repository(
         }
     }
 
+    suspend fun loadAccountByUsername(username: String):Account?{
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext){
+            db.accountsDao().loadByUsername(username)
+        }
+    }
+
     suspend fun loadAccount(accountId: Int): Account {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             db.accountsDao().loadById(accountId)
         }
     }
-    suspend fun loadAccounts(): List<Account>{
-        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext){
+
+    suspend fun loadAccounts(): List<Account> {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             db.accountsDao().loadAll()
         }
     }

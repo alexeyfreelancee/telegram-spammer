@@ -16,12 +16,19 @@ import kotlin.collections.HashMap
 object TelegramClientUtil {
     private val clients = HashMap<String, Client?>()
 
-    suspend fun joinGroup(client: Client?, groupId:Int): Boolean?{
+    suspend fun inviteUser(client: Client?, userId:String, chat:String) : Boolean{
+        return suspendCancellableCoroutine {continuation ->
+            //TODO real invite
+            continuation.resume(true){}
+            continuation.resume(false){}
+        }
+    }
+    suspend fun joinGroup(client: Client?, groupId:String): Boolean{
 
         return suspendCancellableCoroutine { continuation->
-
+            //TODO real join
             continuation.resume(true){}
-            continuation.resume(null){}
+            continuation.resume(false){}
         }
     }
 

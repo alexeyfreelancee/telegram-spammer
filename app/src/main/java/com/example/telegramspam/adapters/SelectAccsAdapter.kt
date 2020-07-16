@@ -3,6 +3,7 @@ package com.example.telegramspam.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewManager
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.telegramspam.databinding.SelectAccRowBinding
@@ -19,10 +20,11 @@ class SelectAccsAdapter(private val viewModel:JoinerViewModel) : RecyclerView.Ad
 
     inner class SelectAccViewHolder(itemView: View) :RecyclerView.ViewHolder(itemView){
         fun bind(account:Account){
-            DataBindingUtil.bind<SelectAccRowBinding>(itemView)?.apply {
-                this.account = account
-                this.viewmodel = viewModel
-            }
+                DataBindingUtil.bind<SelectAccRowBinding>(itemView)?.apply {
+                    this.account = account
+                    this.viewmodel = viewModel
+                }
+
         }
     }
 

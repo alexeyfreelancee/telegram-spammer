@@ -8,7 +8,9 @@ import com.example.telegramspam.models.Account
 interface AccountsDao {
     @Query("SELECT * FROM accounts_table")
     suspend fun loadAll() : List<Account>
-
+    
+    @Query("SELECT * FROM accounts_table WHERE username LIKE :username")
+    suspend fun loadByUsername(username:String):Account?
 
     @Query("SELECT * FROM accounts_table")
     fun loadAllAsync() : LiveData<List<Account>>

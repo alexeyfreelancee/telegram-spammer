@@ -11,6 +11,7 @@ import com.example.telegramspam.ui.add_account.AddAccountViewModelFactory
 import com.example.telegramspam.ui.chats.ChatsViewModelFactory
 import com.example.telegramspam.ui.current_account.CurrentAccountViewModelFactory
 import com.example.telegramspam.ui.current_chat.CurrentChatViewModelFactory
+import com.example.telegramspam.ui.inviter.InviterViewModelFactory
 import com.example.telegramspam.ui.joiner.JoinerViewModelFactory
 import com.example.telegramspam.ui.login.LoginViewModelFactory
 import com.example.telegramspam.ui.settings.SettingsViewModelFactory
@@ -35,6 +36,7 @@ class App : Application(), KodeinAware {
         bind() from singleton { SharedPrefsHelper(this@App) }
         bind() from eagerSingleton { Repository(instance(), instance(), instance(), instance()) }
 
+        bind() from singleton { InviterViewModelFactory(instance()) }
         bind() from singleton { JoinerViewModelFactory(instance()) }
         bind() from singleton { ChatsViewModelFactory(instance())}
         bind() from singleton { LoginViewModelFactory(instance())}
