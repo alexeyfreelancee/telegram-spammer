@@ -17,6 +17,7 @@ const val PARSER_ID = 1234
 const val SPAMMER_ID = 431
 const val JOINER_ID = 23414
 const val INVITER_ID = 324123
+const val POST_WATCH_ID = 980
 
 fun createNotificationChannels(context: Context) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -43,6 +44,18 @@ fun Context.sendNotificationInviter(   success:Int, errors:Int) {
         .setCategory(NotificationCompat.CATEGORY_MESSAGE)
         .build()
     notificationManager.notify(INVITER_ID + 1, notification)
+}
+
+fun Context.sendNotificationPostWatch(  success:Int, errors:Int) {
+    val notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        .setSmallIcon(R.drawable.ic_app)
+        .setContentTitle("Telegram Spam")
+        .setContentText("Post watching finished. Success (chats) - $success, Errors (chats)  - $errors")
+        .setPriority(NotificationCompat.PRIORITY_LOW)
+        .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+        .build()
+    notificationManager.notify(POST_WATCH_ID + 1, notification)
 }
 
 

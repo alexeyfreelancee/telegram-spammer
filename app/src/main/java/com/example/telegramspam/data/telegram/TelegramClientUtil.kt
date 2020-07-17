@@ -16,8 +16,36 @@ import kotlin.collections.HashMap
 object TelegramClientUtil {
     private val clients = HashMap<String, Client?>()
 
+    suspend fun watchPosts(client: Client?, chatUsername:String):Boolean{
+        val chat = getChatInfo(client, chatUsername)
+        return if(chat!=null){
+            suspendCancellableCoroutine { continuation ->
+
+                client?.send(TdApi.GetChatHistory(chat.id,chat.lastMessage?.id ?: 0, 0, 100,false)){
+                    if(it is TdApi.Messages){
+                        it.messages.forEach {message->
+                            client.send(TdApi.GetMessage(message.chatId, message.id)){result->
+                                if(result is TdApi.Message){
+                                    log("success ${(result.content as TdApi.MessageText).text.text}")
+                                }else{
+                                    log(result)
+                                }
+                            }
+                        }
+                        continuation.resume(true){}
+                    }else{
+                        continuation.resume(false){}
+                    }
+                }
+            }
+
+        }else{
+            false
+        }
+
+    }
     suspend fun inviteUser(client: Client?, username:String, chat:String) : Boolean{
-        val chatId = getChatId(client, chat)
+        val chatId = getChatInfo(client, chat)?.id
         val userId = getUserId(client, username)
 
         return if(chatId != null && userId != null){
@@ -58,11 +86,11 @@ object TelegramClientUtil {
 
     }
 
-    private suspend fun getChatId(client:Client?, username:String):Long?{
+    private suspend fun getChatInfo(client:Client?, username:String):TdApi.Chat?{
         return suspendCancellableCoroutine { continuation->
             client?.send(TdApi.SearchPublicChat(username)){
                 if(it is TdApi.Chat){
-                    continuation.resume(it.id){}
+                    continuation.resume(it){}
                 }else{
                     log(it)
                     continuation.resume(null){}
@@ -73,7 +101,7 @@ object TelegramClientUtil {
     }
 
     suspend fun joinChat(client: Client?, chat:String): Boolean{
-        val chatId = getChatId(client, chat)
+        val chatId = getChatInfo(client, chat)?.id
         return if(chatId!=null){
             suspendCancellableCoroutine { continuation->
                 client?.send(TdApi.JoinChat(chatId)){

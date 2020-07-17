@@ -27,13 +27,14 @@ class JoinerViewModel(private val repository: Repository) : ViewModel() {
     val dbAccounts = repository.loadAccountsAsync()
     val startJoiner = MutableLiveData<Event<JoinerSettings>>()
     val toast = MutableLiveData<Event<String>>()
+    val startPostWatch = MutableLiveData<Event<JoinerSettings>>()
 
-    fun accountSelected(view: View, account:Account){
+    fun accountSelected(view: View, account: Account) {
         val checkBox = view as CheckBox
-        if(checkBox.isChecked){
+        if (checkBox.isChecked) {
             repository.accountSelectedJoiner(account)
             accounts.value = accounts.value!! + Gson().toJson(account) + "|"
-        }else{
+        } else {
             repository.accountDeselectedJoiner(account)
 
             accounts.value = repository.deselectAccount(account.id, accounts.value!!)
@@ -41,11 +42,28 @@ class JoinerViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
+    fun startPostWatch(view: View) {
+        if (connected(view)) {
+            if (accounts.value!!.replace("|", "").isNotBlank() && groups.value!!.isNotBlank()) {
+                val joinerSettings = JoinerSettings(
+                    groups = groups.value ?: "",
+                    accounts = accounts.value ?: "",
+                    delay = delay.value!!.toInt()
+                )
+                saveSettings()
+                startPostWatch.value = Event(joinerSettings)
+            } else {
+                toast.value = Event("Заполните все поля")
+            }
+        } else {
+            toast.value = Event(NO_INTERNET)
+        }
+    }
 
     fun loadSettings() {
         viewModelScope.launch {
             val settings = repository.loadJoinerSettings()
-            if(settings!=null){
+            if (settings != null) {
                 accounts.value = settings.accounts
                 groups.value = settings.groups
                 delay.value = settings.delay.toString()
@@ -55,11 +73,9 @@ class JoinerViewModel(private val repository: Repository) : ViewModel() {
     }
 
 
-
-
-    fun startJoiner(view:View) {
-        if(connected(view)){
-            if(accounts.value!!.isNotBlank() && groups.value!!.isNotBlank() && delay.value!!.isNotBlank()){
+    fun startJoiner(view: View) {
+        if (connected(view)) {
+            if (accounts.value!!.isNotBlank() && groups.value!!.isNotBlank() && delay.value!!.isNotBlank()) {
                 val joinerSettings = JoinerSettings(
                     groups = groups.value ?: "",
                     accounts = accounts.value ?: "",
@@ -67,10 +83,10 @@ class JoinerViewModel(private val repository: Repository) : ViewModel() {
                 )
                 saveSettings()
                 startJoiner.value = Event(joinerSettings)
-            } else{
+            } else {
                 toast.value = Event("Заполните все поля")
             }
-        } else{
+        } else {
             toast.value = Event(NO_INTERNET)
         }
 

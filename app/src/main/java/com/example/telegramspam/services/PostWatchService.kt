@@ -6,7 +6,7 @@ import android.os.IBinder
 import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.ClientCreateResult
-import com.example.telegramspam.models.InviterSettings
+import com.example.telegramspam.models.JoinerSettings
 import com.example.telegramspam.utils.*
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
@@ -14,16 +14,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class InviterService : Service() {
-    override fun onBind(p0: Intent?): IBinder? = null
-
+class PostWatchService : Service(){
     private val clients = HashSet<String>()
-    private val STOP_CURRENT = "com.example.telegramspam.services.STOP_CURRENT_INVITER"
-    private val STOP_ALL = "com.example.telegramspam.services.STOP_ALL_INVITER"
+    private val STOP_CURRENT = "com.example.telegramspam.services.STOP_CURRENT_POST_WATCH"
+    private val STOP_ALL = "com.example.telegramspam.services.STOP_ALL_POST_WATCH"
 
 
     private fun generateStopAll(): Intent {
-        val stopIntent = Intent(this@InviterService, InviterService::class.java)
+        val stopIntent = Intent(this@PostWatchService, PostWatchService::class.java)
         stopIntent.action = STOP_ALL
         return stopIntent
     }
@@ -40,23 +38,26 @@ class InviterService : Service() {
         }
     }
 
+    override fun onBind(p0: Intent?): IBinder? {
+        return null
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             val action = intent.action
             if (action != null && action.startsWith(STOP_CURRENT)) {
-                log("stop current inviter")
+                log("stop current parsing")
                 stop(action)
             } else if (action != null && action == STOP_ALL) {
-                log("stop all inviter")
+                log("stop all parsing")
                 stopAll()
             } else {
                 CoroutineScope(Dispatchers.IO).launch {
                     val settings = Gson().fromJson(
                         intent.getStringExtra("settings"),
-                        InviterSettings::class.java
+                        JoinerSettings::class.java
                     )
-                    startInviter(settings)
+                    startJoiner(settings)
                 }
 
 
@@ -68,11 +69,11 @@ class InviterService : Service() {
     }
 
 
-    private suspend fun startInviter(settings: InviterSettings) {
+    private suspend fun startJoiner(settings: JoinerSettings) {
         startForeground(
-            INVITER_ID,
+            POST_WATCH_ID,
             createServiceNotification(
-                "Inviter is running",
+                "Joiner is running",
                 generateStopAll()
             )
         )
@@ -80,35 +81,36 @@ class InviterService : Service() {
         var errors = 0
         var success = 0
 
-        val accounts = settings.accounts.toArrayList()
-        val inviteFrom = Gson().fromJson(settings.inviteFromJson, Account::class.java)
 
-        when (val result = TelegramClientUtil.provideClient(inviteFrom)) {
-            is ClientCreateResult.Success -> {
-                val client = result.client
-                clients.add(inviteFrom.phoneNumber)
-                TelegramClientUtil.watchPosts(client,"channeljointest1" )
-                //TODO uncomment
-//                accounts.forEach { account ->
-//                    if (TelegramClientUtil.inviteUser(
-//                            client,
-//                            account,
-//                            settings.chat
-//                        )
-//                    ) success++ else errors++
-//                    delay(settings.delay.toLong() * 1000)
-//                }
+        val accounts = loadAccounts(settings.accounts)
+        val groups = settings.groups.toArrayList()
+
+
+        accounts.forEach { json ->
+            val account = Gson().fromJson(json, Account::class.java)
+            when (val result = TelegramClientUtil.provideClient(account)) {
+                is ClientCreateResult.Success -> {
+                    val client = result.client
+                    clients.add(account.phoneNumber)
+                    groups.forEach { groupId ->
+                        if (TelegramClientUtil.watchPosts(client, groupId)) success++ else errors++
+                        delay(settings.delay.toLong() * 1000)
+                    }
+                }
+                is ClientCreateResult.Error -> {
+                    errors++
+                }
             }
-            is ClientCreateResult.Error -> {
-                errors++
-            }
+
         }
-
-
         clients.forEach {
             TelegramClientUtil.stopClient(it)
         }
-        sendNotificationInviter(success, errors)
+        sendNotificationPostWatch(success, errors)
         stopSelf()
+    }
+
+    private fun loadAccounts(string:String):List<String>{
+        return string.split("|").filter { it.length > 3 }
     }
 }

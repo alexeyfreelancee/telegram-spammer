@@ -15,6 +15,7 @@ import com.example.telegramspam.adapters.SelectAccsAdapter
 import com.example.telegramspam.databinding.JoinerFragmentBinding
 import com.example.telegramspam.models.JoinerSettings
 import com.example.telegramspam.services.JoinerService
+import com.example.telegramspam.services.PostWatchService
 import com.example.telegramspam.utils.toast
 import com.google.gson.Gson
 import org.kodein.di.KodeinAware
@@ -39,7 +40,11 @@ class JoinerFragment : Fragment(),KodeinAware {
             viewmodel = viewModel
             lifecycleOwner = viewLifecycleOwner
         }
-
+        viewModel.startPostWatch.observe(viewLifecycleOwner, Observer {
+            if(!it.hasBeenHandled){
+                startPostWatch(it.peekContent())
+            }
+        })
         viewModel.startJoiner.observe(viewLifecycleOwner, Observer {
             if(!it.hasBeenHandled){
                 startJoiner(it.peekContent())
@@ -71,6 +76,13 @@ class JoinerFragment : Fragment(),KodeinAware {
         super.onPause()
         viewModel.saveSettings()
     }
+
+    private fun startPostWatch(joinerSettings: JoinerSettings){
+        val intent = Intent(requireContext(), PostWatchService::class.java)
+        intent.putExtra("settings" ,Gson().toJson(joinerSettings))
+        requireActivity().startService(intent)
+    }
+
     private fun startJoiner(joinerSettings: JoinerSettings){
         val intent = Intent(requireContext(), JoinerService::class.java)
         intent.putExtra("settings" ,Gson().toJson(joinerSettings))
