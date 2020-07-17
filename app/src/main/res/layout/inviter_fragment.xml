@@ -79,27 +79,26 @@
         </com.google.android.material.textfield.TextInputLayout>
 
 
-
-
         <Button
-            android:onClick="@{viewmodel::startInviter}"
             android:id="@+id/button6"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:onClick="@{viewmodel::startInviter}"
             android:text="Старт"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/button7" />
 
         <Button
             android:id="@+id/button7"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginTop="16dp"
             android:onClick="@{viewmodel::showGuide}"
             android:text="Инструкция"
-            app:layout_constraintBottom_toTopOf="@+id/button6"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textInputLayout9" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </layout>

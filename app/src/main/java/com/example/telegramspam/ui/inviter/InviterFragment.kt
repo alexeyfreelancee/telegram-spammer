@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -32,24 +33,25 @@ class InviterFragment : Fragment(), KodeinAware {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        activity?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         viewModel = ViewModelProvider(this, factory).get(InviterViewModel::class.java)
         binding = InviterFragmentBinding.inflate(inflater, container, false).apply {
             this.lifecycleOwner = viewLifecycleOwner
             this.viewmodel = viewModel
         }
         viewModel.showGuide.observe(viewLifecycleOwner, Observer {
-            if(!it.hasBeenHandled){
+            if (!it.hasBeenHandled) {
                 it.peekContent()
                 showGuide()
             }
         })
         viewModel.startInviter.observe(viewLifecycleOwner, Observer {
-            if(!it.hasBeenHandled){
+            if (!it.hasBeenHandled) {
                 startInviter(it.peekContent())
             }
         })
         viewModel.toast.observe(viewLifecycleOwner, Observer {
-            if(!it.hasBeenHandled){
+            if (!it.hasBeenHandled) {
                 toast(it.peekContent())
             }
         })
@@ -57,14 +59,15 @@ class InviterFragment : Fragment(), KodeinAware {
     }
 
 
-    private fun showGuide(){
-        object:Dialog(requireContext()){
+    private fun showGuide() {
+        object : Dialog(requireContext()) {
             override fun onCreate(savedInstanceState: Bundle?) {
                 super.onCreate(savedInstanceState)
                 setContentView(R.layout.inviter_guide)
             }
         }.show()
     }
+
     override fun onResume() {
         super.onResume()
         viewModel.loadSettings()
@@ -76,7 +79,7 @@ class InviterFragment : Fragment(), KodeinAware {
     }
 
 
-    private fun startInviter(settings:InviterSettings){
+    private fun startInviter(settings: InviterSettings) {
         val intent = Intent(requireContext(), InviterService::class.java)
         intent.putExtra("settings", Gson().toJson(settings))
         requireActivity().startService(intent)

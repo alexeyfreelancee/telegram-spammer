@@ -44,10 +44,10 @@ class InviterService : Service() {
         if (intent != null) {
             val action = intent.action
             if (action != null && action.startsWith(STOP_CURRENT)) {
-                log("stop current parsing")
+                log("stop current inviter")
                 stop(action)
             } else if (action != null && action == STOP_ALL) {
-                log("stop all parsing")
+                log("stop all inviter")
                 stopAll()
             } else {
                 CoroutineScope(Dispatchers.IO).launch {

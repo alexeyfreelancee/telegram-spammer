@@ -10,6 +10,7 @@ import com.example.telegramspam.data.Repository
 import com.example.telegramspam.models.Event
 import com.example.telegramspam.models.InviterSettings
 import com.example.telegramspam.utils.connected
+import com.example.telegramspam.utils.toArrayList
 import kotlinx.coroutines.launch
 
 class InviterViewModel(private val repository: Repository) : ViewModel() {
@@ -41,7 +42,7 @@ class InviterViewModel(private val repository: Repository) : ViewModel() {
     fun startInviter(view: View) {
         viewModelScope.launch {
             if (connected(view)) {
-                if (accounts.value!!.isNotBlank() && delay.value!!.isNotBlank() && chat.value!!.isNotBlank()) {
+                if (accounts.value!!.toArrayList().isNotEmpty() && delay.value!!.isNotBlank() && chat.value!!.isNotBlank()) {
                     if(repository.checkInviteFrom(inviteFrom.value!!)){
                         val settings = InviterSettings(
                             accounts = accounts.value!!,

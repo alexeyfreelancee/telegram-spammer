@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"/>
 
         <TextView
-            android:text="Список аккаунтов на которые будут отправлены приглашения. \nПример - @chatname,@chatname,@chatname"
+            android:text="Список аккаунтов на которые будут отправлены приглашения.  \nПример - @chatname,@chatname,@chatname"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 

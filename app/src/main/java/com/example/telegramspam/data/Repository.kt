@@ -20,6 +20,7 @@ import kotlinx.coroutines.withContext
 import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 import java.io.File
+import java.lang.Exception
 
 
 class Repository(
@@ -28,10 +29,11 @@ class Repository(
     private val mediaPlayer: MediaPlayer,
     private val prefs: SharedPrefsHelper
 ) {
-    suspend fun checkInviteFrom(inviteFrom: String):Boolean{
+    suspend fun checkInviteFrom(inviteFrom: String): Boolean {
         val account = loadAccountByUsername(inviteFrom)
         return account != null
     }
+
     suspend fun loadInviterSettings(): InviterSettings? {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             db.inviterSettingsDao().loadSettings()
@@ -41,10 +43,15 @@ class Repository(
     fun saveInviterSettings(accounts: String, groups: String, delay: String, inviteFrom: String) {
         CoroutineScope(Dispatchers.IO).launch {
             val account = loadAccountByUsername(inviteFrom)
+            val delayInt = try {
+                delay.toInt()
+            } catch (ex: Exception) {
+                0
+            }
             val settings = InviterSettings(
                 accounts = accounts,
                 chat = groups,
-                delay = delay.toInt(),
+                delay = delayInt,
                 inviteFrom = Gson().toJson(account)
             )
             db.inviterSettingsDao().saveSettings(settings)
@@ -78,8 +85,13 @@ class Repository(
 
     fun saveJoinerSettings(groups: String, accounts: String, delay: String) {
         CoroutineScope(Dispatchers.IO).launch {
+            val delayInt = try {
+                delay.toInt()
+            } catch (ex: Exception) {
+                0
+            }
             val settings =
-                JoinerSettings(groups = groups, accounts = accounts, delay = delay.toInt())
+                JoinerSettings(groups = groups, accounts = accounts, delay = delayInt)
             db.joinerSettingsDao().saveSettings(settings)
             log(settings)
         }
@@ -311,8 +323,8 @@ class Repository(
         }
     }
 
-    suspend fun loadAccountByUsername(username: String):Account?{
-        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext){
+    suspend fun loadAccountByUsername(username: String): Account? {
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             db.accountsDao().loadByUsername(username)
         }
     }
