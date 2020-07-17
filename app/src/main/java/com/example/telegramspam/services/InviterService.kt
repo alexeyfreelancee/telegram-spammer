@@ -11,6 +11,7 @@ import com.example.telegramspam.utils.*
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class InviterService : Service() {
@@ -80,7 +81,7 @@ class InviterService : Service() {
         var success = 0
 
         val accounts = settings.accounts.toArrayList()
-        val inviteFrom = Gson().fromJson(settings.inviteFrom, Account::class.java)
+        val inviteFrom = Gson().fromJson(settings.inviteFromJson, Account::class.java)
 
         when (val result = TelegramClientUtil.provideClient(inviteFrom)) {
             is ClientCreateResult.Success -> {
@@ -93,6 +94,7 @@ class InviterService : Service() {
                             settings.chat
                         )
                     ) success++ else errors++
+                    delay(settings.delay.toLong() * 1000)
                 }
             }
             is ClientCreateResult.Error -> {

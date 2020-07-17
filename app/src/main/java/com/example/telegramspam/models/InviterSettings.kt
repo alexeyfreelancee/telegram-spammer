@@ -10,5 +10,6 @@ data class InviterSettings(
     val accounts: String= "",
     val chat: String= "",
     val delay: Int = 0,
+    val inviteFromJson:String = "",
     val inviteFrom:String = ""
 )

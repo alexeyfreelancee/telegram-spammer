@@ -16,19 +16,66 @@ import kotlin.collections.HashMap
 object TelegramClientUtil {
     private val clients = HashMap<String, Client?>()
 
-    suspend fun inviteUser(client: Client?, userId:String, chat:String) : Boolean{
-        return suspendCancellableCoroutine {continuation ->
-            //TODO real invite
-            continuation.resume(true){}
-            continuation.resume(false){}
+    suspend fun inviteUser(client: Client?, username:String, chat:String) : Boolean{
+        val chatId = getChatId(client, chat)
+        val userId = getUserId(client, username)
+
+        return if(chatId != null && userId != null){
+            suspendCancellableCoroutine {continuation ->
+                client?.send(TdApi.AddChatMember(chatId, userId, 100)){
+                    if(it is TdApi.Ok){
+                        continuation.resume(true){}
+                    }else{
+                        log("add chat member error")
+                        log(it)
+                        continuation.resume(false){}
+                    }
+                }
+            }
+        }else{
+            false
         }
+
+    }
+
+    suspend fun getUserId(client:Client?, username:String):Int?{
+        return suspendCancellableCoroutine { continuation->
+            client?.send(TdApi.SearchPublicChat(username)){chat->
+                if(chat is TdApi.Chat ){
+                    val chatType = chat.type
+                    if(chatType is TdApi.ChatTypePrivate){
+                        continuation.resume(chatType.userId){}
+                    } else{
+                        log("get user error ")
+                        continuation.resume(null){}
+                    }
+                }else{
+                    log("get user error")
+                    continuation.resume(null){}
+                }
+            }
+        }
+
+    }
+
+    suspend fun getChatId(client:Client?, username:String):Long?{
+        return suspendCancellableCoroutine { continuation->
+            client?.send(TdApi.SearchPublicChat(username)){
+                if(it is TdApi.Chat){
+                    continuation.resume(it.id){}
+                }else{
+                    log("get chat error")
+                    continuation.resume(null){}
+                }
+            }
+         }
+
     }
     suspend fun joinGroup(client: Client?, groupId:String): Boolean{
 
         return suspendCancellableCoroutine { continuation->
             //TODO real join
             continuation.resume(true){}
-            continuation.resume(false){}
         }
     }
 

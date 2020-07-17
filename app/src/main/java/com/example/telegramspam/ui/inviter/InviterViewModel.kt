@@ -48,6 +48,7 @@ class InviterViewModel(private val repository: Repository) : ViewModel() {
                             accounts = accounts.value!!,
                             chat = chat.value!!,
                             delay = delay.value!!.toInt(),
+                            inviteFromJson = repository.provideAccountJson(inviteFrom.value!!),
                             inviteFrom = inviteFrom.value!!
                         )
                         saveSettings()

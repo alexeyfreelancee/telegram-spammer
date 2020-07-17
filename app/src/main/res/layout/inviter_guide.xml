@@ -12,13 +12,26 @@
 
         <TextView
             android:textSize="18sp"
-            android:text="Чат"
+            android:text="ВАЖНО!"
             android:textStyle="bold"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
         <TextView
-            android:text="Чат в который будут рассылаться приглашения. \nНе больше одного. Пример - @chatname"
+            android:text="Если пользователь покинул группу/чат пригласить его снова получится только если он у ваc в контактах"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_marginTop="16dp"
+            android:textSize="18sp"
+            android:text="Чат/Группа"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:text="Чат или группа в которую будут рассылаться приглашения. \nНе больше одного значения. Пример - @chatname"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 

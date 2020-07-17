@@ -12,6 +12,7 @@ import com.example.telegramspam.utils.*
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class JoinerService : Service() {
@@ -92,6 +93,7 @@ class JoinerService : Service() {
                     clients.add(account.phoneNumber)
                     groups.forEach { groupId ->
                         if (TelegramClientUtil.joinGroup(client, groupId)) success++ else errors++
+                        delay(settings.delay.toLong() * 1000)
                     }
                 }
                 is ClientCreateResult.Error -> {

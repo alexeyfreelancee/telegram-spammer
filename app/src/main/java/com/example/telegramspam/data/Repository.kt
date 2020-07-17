@@ -21,6 +21,7 @@ import org.drinkless.td.libcore.telegram.Client
 import org.drinkless.td.libcore.telegram.TdApi
 import java.io.File
 import java.lang.Exception
+import kotlin.coroutines.CoroutineContext
 
 
 class Repository(
@@ -40,9 +41,15 @@ class Repository(
         }
     }
 
+    suspend fun provideAccountJson(username:String):String{
+        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext){
+            val account = loadAccountByUsername(username)
+             if(account == null) "" else Gson().toJson(account)
+        }
+
+    }
     fun saveInviterSettings(accounts: String, groups: String, delay: String, inviteFrom: String) {
         CoroutineScope(Dispatchers.IO).launch {
-            val account = loadAccountByUsername(inviteFrom)
             val delayInt = try {
                 delay.toInt()
             } catch (ex: Exception) {
@@ -52,7 +59,8 @@ class Repository(
                 accounts = accounts,
                 chat = groups,
                 delay = delayInt,
-                inviteFrom = Gson().toJson(account)
+                inviteFromJson = provideAccountJson(inviteFrom),
+                inviteFrom = inviteFrom
             )
             db.inviterSettingsDao().saveSettings(settings)
         }
@@ -323,9 +331,9 @@ class Repository(
         }
     }
 
-    suspend fun loadAccountByUsername(username: String): Account? {
+    private suspend fun loadAccountByUsername(username: String): Account? {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            db.accountsDao().loadByUsername(username)
+            db.accountsDao().loadByUsername(username.replace("@", ""))
         }
     }
 

@@ -9,7 +9,7 @@ import com.example.telegramspam.models.JoinerSettings
 
 @Database(
     entities = [Account::class, AccountSettings::class, JoinerSettings::class, InviterSettings::class],
-    version = 17
+    version = 18
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun accountsDao(): AccountsDao
