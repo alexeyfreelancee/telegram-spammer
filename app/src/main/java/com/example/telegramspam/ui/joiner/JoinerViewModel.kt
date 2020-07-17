@@ -32,13 +32,16 @@ class JoinerViewModel(private val repository: Repository) : ViewModel() {
         val checkBox = view as CheckBox
         if(checkBox.isChecked){
             repository.accountSelectedJoiner(account)
-            accounts.value = accounts.value!! + Gson().toJson(account) + ","
+            accounts.value = accounts.value!! + Gson().toJson(account) + "|"
         }else{
             repository.accountDeselectedJoiner(account)
-            accounts.value!!.replace(Gson().toJson(account), "")
+
+            accounts.value = repository.deselectAccount(account.id, accounts.value!!)
 
         }
     }
+
+
     fun loadSettings() {
         viewModelScope.launch {
             val settings = repository.loadJoinerSettings()

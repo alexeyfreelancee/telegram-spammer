@@ -38,7 +38,7 @@ object TelegramClientUtil {
 
     }
 
-    suspend fun getUserId(client:Client?, username:String):Int?{
+    private suspend fun getUserId(client:Client?, username:String):Int?{
         return suspendCancellableCoroutine { continuation->
             client?.send(TdApi.SearchPublicChat(username)){chat->
                 if(chat is TdApi.Chat ){
@@ -58,25 +58,38 @@ object TelegramClientUtil {
 
     }
 
-    suspend fun getChatId(client:Client?, username:String):Long?{
+    private suspend fun getChatId(client:Client?, username:String):Long?{
         return suspendCancellableCoroutine { continuation->
             client?.send(TdApi.SearchPublicChat(username)){
                 if(it is TdApi.Chat){
                     continuation.resume(it.id){}
                 }else{
-                    log("get chat error")
+                    log(it)
                     continuation.resume(null){}
                 }
             }
          }
 
     }
-    suspend fun joinGroup(client: Client?, groupId:String): Boolean{
 
-        return suspendCancellableCoroutine { continuation->
-            //TODO real join
-            continuation.resume(true){}
+    suspend fun joinChat(client: Client?, chat:String): Boolean{
+        val chatId = getChatId(client, chat)
+        return if(chatId!=null){
+            suspendCancellableCoroutine { continuation->
+                client?.send(TdApi.JoinChat(chatId)){
+                    if(it is TdApi.Ok){
+                        continuation.resume(true){}
+                    } else{
+                       log(it)
+                        continuation.resume(false){}
+                    }
+                }
+
+            }
+        } else{
+            false
         }
+
     }
 
     suspend fun downloadFile(id: Int?): File? {

@@ -30,6 +30,15 @@ class Repository(
     private val mediaPlayer: MediaPlayer,
     private val prefs: SharedPrefsHelper
 ) {
+    fun deselectAccount(id:Int, string:String):String{
+        val list = string.split("|").filter { it.length > 3 }
+        val result = java.lang.StringBuilder()
+        list.forEach {
+            val account = Gson().fromJson(it, Account::class.java)
+            if(account.id!=id) result.append("$it|")
+        }
+        return result.toString()
+    }
     suspend fun checkInviteFrom(inviteFrom: String): Boolean {
         val account = loadAccountByUsername(inviteFrom)
         return account != null
@@ -84,7 +93,6 @@ class Repository(
 
     suspend fun loadJoinerSettings(): JoinerSettings? {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            log("${db.joinerSettingsDao().loadSettings("settings")}")
             db.joinerSettingsDao().loadSettings("settings")
 
         }
@@ -101,7 +109,6 @@ class Repository(
             val settings =
                 JoinerSettings(groups = groups, accounts = accounts, delay = delayInt)
             db.joinerSettingsDao().saveSettings(settings)
-            log(settings)
         }
 
     }
@@ -314,7 +321,6 @@ class Repository(
 
     suspend fun saveSettings(accountSettings: AccountSettings) {
         CoroutineScope(Dispatchers.IO).launch {
-            log("settings saved $accountSettings")
             db.accountSettingsDao().insert(accountSettings)
         }
     }
@@ -340,12 +346,6 @@ class Repository(
     suspend fun loadAccount(accountId: Int): Account {
         return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             db.accountsDao().loadById(accountId)
-        }
-    }
-
-    suspend fun loadAccounts(): List<Account> {
-        return withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            db.accountsDao().loadAll()
         }
     }
 

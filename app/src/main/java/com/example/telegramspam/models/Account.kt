@@ -16,6 +16,5 @@ data class Account(
     var proxyType:String ="",
     var databasePath:String = "",
     var proxyId: Int = 0,
-    var joinerSelected:Boolean= false,
-    var inviterSelected:Boolean= false
+    var joinerSelected:Boolean= false
 )

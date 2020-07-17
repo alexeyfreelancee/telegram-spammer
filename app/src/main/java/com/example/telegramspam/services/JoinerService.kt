@@ -6,7 +6,6 @@ import android.os.IBinder
 import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.models.Account
 import com.example.telegramspam.models.ClientCreateResult
-import com.example.telegramspam.models.GetChatResult
 import com.example.telegramspam.models.JoinerSettings
 import com.example.telegramspam.utils.*
 import com.google.gson.Gson
@@ -82,8 +81,10 @@ class JoinerService : Service() {
         var errors = 0
         var success = 0
 
-        val accounts = settings.accounts.toArrayList()
+
+        val accounts = loadAccounts(settings.accounts)
         val groups = settings.groups.toArrayList()
+
 
         accounts.forEach { json ->
             val account = Gson().fromJson(json, Account::class.java)
@@ -92,7 +93,7 @@ class JoinerService : Service() {
                     val client = result.client
                     clients.add(account.phoneNumber)
                     groups.forEach { groupId ->
-                        if (TelegramClientUtil.joinGroup(client, groupId)) success++ else errors++
+                        if (TelegramClientUtil.joinChat(client, groupId)) success++ else errors++
                         delay(settings.delay.toLong() * 1000)
                     }
                 }
@@ -107,5 +108,9 @@ class JoinerService : Service() {
         }
         sendNotificationJoiner(success, errors)
         stopSelf()
+    }
+
+    private fun loadAccounts(string:String):List<String>{
+        return string.split("|").filter { it.length > 3 }
     }
 }
