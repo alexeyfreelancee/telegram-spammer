@@ -16,105 +16,111 @@ import kotlin.collections.HashMap
 object TelegramClientUtil {
     private val clients = HashMap<String, Client?>()
 
-    suspend fun watchPosts(client: Client?, chatUsername:String):Boolean{
+    suspend fun watchPosts(client: Client?, chatUsername: String): Boolean {
         val chat = getChatInfo(client, chatUsername)
-        return if(chat!=null){
+        return if (chat != null) {
             suspendCancellableCoroutine { continuation ->
-
-                client?.send(TdApi.GetChatHistory(chat.id,chat.lastMessage?.id ?: 0, 0, 100,false)){
-                    if(it is TdApi.Messages){
-                        it.messages.forEach {message->
-                            client.send(TdApi.GetMessage(message.chatId, message.id)){result->
-                                if(result is TdApi.Message){
-                                    log("success ${(result.content as TdApi.MessageText).text.text}")
-                                }else{
-                                    log(result)
-                                }
-                            }
+                client?.send(
+                    TdApi.GetChatHistory(
+                        chat.id,
+                        chat.lastMessage?.id ?: 0,
+                        0,
+                        100,
+                        false
+                    )
+                ) {
+                    if (it is TdApi.Messages) {
+                        val idList = LongArray(it.messages.size)
+                        for((i, msg) in it.messages.withIndex()){
+                            idList[i] = msg.id
                         }
-                        continuation.resume(true){}
-                    }else{
-                        continuation.resume(false){}
+                        client.send(TdApi.ViewMessages(chat.id, idList, true)) {result->
+                            if(result is TdApi.Ok) continuation.resume(true) {}
+                            else  continuation.resume(false) {}
+                        }
+                    } else {
+                        continuation.resume(false) {}
                     }
                 }
             }
 
-        }else{
+        } else {
             false
         }
 
     }
-    suspend fun inviteUser(client: Client?, username:String, chat:String) : Boolean{
+
+    suspend fun inviteUser(client: Client?, username: String, chat: String): Boolean {
         val chatId = getChatInfo(client, chat)?.id
         val userId = getUserId(client, username)
 
-        return if(chatId != null && userId != null){
-            suspendCancellableCoroutine {continuation ->
-                client?.send(TdApi.AddChatMember(chatId, userId, 100)){
-                    if(it is TdApi.Ok){
-                        continuation.resume(true){}
-                    }else{
+        return if (chatId != null && userId != null) {
+            suspendCancellableCoroutine { continuation ->
+                client?.send(TdApi.AddChatMember(chatId, userId, 100)) {
+                    if (it is TdApi.Ok) {
+                        continuation.resume(true) {}
+                    } else {
                         log("add chat member error")
                         log(it)
-                        continuation.resume(false){}
+                        continuation.resume(false) {}
                     }
                 }
             }
-        }else{
+        } else {
             false
         }
 
     }
 
-    private suspend fun getUserId(client:Client?, username:String):Int?{
-        return suspendCancellableCoroutine { continuation->
-            client?.send(TdApi.SearchPublicChat(username)){chat->
-                if(chat is TdApi.Chat ){
+    private suspend fun getUserId(client: Client?, username: String): Int? {
+        return suspendCancellableCoroutine { continuation ->
+            client?.send(TdApi.SearchPublicChat(username)) { chat ->
+                if (chat is TdApi.Chat) {
                     val chatType = chat.type
-                    if(chatType is TdApi.ChatTypePrivate){
-                        continuation.resume(chatType.userId){}
-                    } else{
+                    if (chatType is TdApi.ChatTypePrivate) {
+                        continuation.resume(chatType.userId) {}
+                    } else {
                         log("get user error ")
-                        continuation.resume(null){}
+                        continuation.resume(null) {}
                     }
-                }else{
+                } else {
                     log("get user error")
-                    continuation.resume(null){}
+                    continuation.resume(null) {}
                 }
             }
         }
 
     }
 
-    private suspend fun getChatInfo(client:Client?, username:String):TdApi.Chat?{
-        return suspendCancellableCoroutine { continuation->
-            client?.send(TdApi.SearchPublicChat(username)){
-                if(it is TdApi.Chat){
-                    continuation.resume(it){}
-                }else{
+    private suspend fun getChatInfo(client: Client?, username: String): TdApi.Chat? {
+        return suspendCancellableCoroutine { continuation ->
+            client?.send(TdApi.SearchPublicChat(username)) {
+                if (it is TdApi.Chat) {
+                    continuation.resume(it) {}
+                } else {
                     log(it)
-                    continuation.resume(null){}
+                    continuation.resume(null) {}
                 }
             }
-         }
+        }
 
     }
 
-    suspend fun joinChat(client: Client?, chat:String): Boolean{
+    suspend fun joinChat(client: Client?, chat: String): Boolean {
         val chatId = getChatInfo(client, chat)?.id
-        return if(chatId!=null){
-            suspendCancellableCoroutine { continuation->
-                client?.send(TdApi.JoinChat(chatId)){
-                    if(it is TdApi.Ok){
-                        continuation.resume(true){}
-                    } else{
-                       log(it)
-                        continuation.resume(false){}
+        return if (chatId != null) {
+            suspendCancellableCoroutine { continuation ->
+                client?.send(TdApi.JoinChat(chatId)) {
+                    if (it is TdApi.Ok) {
+                        continuation.resume(true) {}
+                    } else {
+                        log(it)
+                        continuation.resume(false) {}
                     }
                 }
 
             }
-        } else{
+        } else {
             false
         }
 
@@ -129,10 +135,10 @@ object TelegramClientUtil {
                 if (it is TdApi.File) {
                     if (!it.local.path.isNullOrEmpty()) {
                         continuation.resume(File(it.local.path)) {}
-                    } else{
-                       CoroutineScope(Dispatchers.IO).launch {  continuation.resume(downloadFile(id)){} }
+                    } else {
+                        CoroutineScope(Dispatchers.IO).launch { continuation.resume(downloadFile(id)) {} }
                     }
-                } else{
+                } else {
                     continuation.resume(null) {}
                 }
 
@@ -500,7 +506,6 @@ object TelegramClientUtil {
             }
         }
     }
-
 
 
     suspend fun getChat(client: Client?, link: String): GetChatResult {

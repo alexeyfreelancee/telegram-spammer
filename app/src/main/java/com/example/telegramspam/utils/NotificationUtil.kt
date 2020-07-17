@@ -83,10 +83,7 @@ fun Context.sendNotification(phone:String, message:String, id: Int) {
     notificationManager.notify(id, notification)
 }
 
-fun Context.cancelNotification(id:Int){
-    val notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    notificationManager.cancel(id)
-}
+
 fun Context.sendNotificationService(phone:String,message:String, id:Int, stopIntent: Intent){
     val notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     val pStopSelf =
