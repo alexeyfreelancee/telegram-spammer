@@ -34,10 +34,11 @@ class InviterService : Service() {
     }
 
     private fun stopAll() {
-        stopSelf()
         clients.forEach {
             TelegramClientUtil.stopClient(it)
         }
+        stopSelf()
+        onDestroy()
     }
 
 

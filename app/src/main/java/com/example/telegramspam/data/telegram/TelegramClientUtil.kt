@@ -39,7 +39,7 @@ object TelegramClientUtil {
                             if (response is TdApi.Ok) {
                                 client.send(TdApi.ViewMessages(chat.id, idList, false)) { result ->
                                     if (result is TdApi.Ok) {
-                                        client.send(TdApi.CloseChat(chat.id)){}
+                                        client.send(TdApi.CloseChat(chat.id)) {}
                                         continuation.resume(true) {}
                                     } else {
                                         continuation.resume(false) {}
@@ -95,10 +95,12 @@ object TelegramClientUtil {
                         continuation.resume(chatType.userId) {}
                     } else {
                         log("get user error ")
+                        log(chat)
                         continuation.resume(null) {}
                     }
                 } else {
                     log("get user error")
+                    log(chat)
                     continuation.resume(null) {}
                 }
             }
@@ -265,7 +267,7 @@ object TelegramClientUtil {
 
     suspend fun provideClient(account: Account): ClientCreateResult {
         val savedClient = clients[account.phoneNumber]
-        if (savedClient == null) {
+        if (savedClient == null || savedClient.isClosed()) {
             return createClient(account)
         } else {
             return suspendCancellableCoroutine { continuation ->
@@ -284,6 +286,16 @@ object TelegramClientUtil {
 
     }
 
+    private suspend fun Client?.isClosed(): Boolean {
+        return suspendCancellableCoroutine { continuation ->
+            this?.send(TdApi.GetMe()) {
+                if (it is TdApi.Error)
+                    continuation.resume(true) {}
+                else
+                    continuation.resume(false) {}
+            }
+        }
+    }
 
     fun stopClient(phoneNumber: String) {
         clients[phoneNumber]?.let {

