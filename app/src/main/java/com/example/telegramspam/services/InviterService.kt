@@ -87,17 +87,16 @@ class InviterService : Service() {
             is ClientCreateResult.Success -> {
                 val client = result.client
                 clients.add(inviteFrom.phoneNumber)
-                TelegramClientUtil.watchPosts(client,"channeljointest1" )
-                //TODO uncomment
-//                accounts.forEach { account ->
-//                    if (TelegramClientUtil.inviteUser(
-//                            client,
-//                            account,
-//                            settings.chat
-//                        )
-//                    ) success++ else errors++
-//                    delay(settings.delay.toLong() * 1000)
-//                }
+
+                accounts.forEach { account ->
+                    if (TelegramClientUtil.inviteUser(
+                            client,
+                            account,
+                            settings.chat
+                        )
+                    ) success++ else errors++
+                    delay(settings.delay.toLong() * 1000)
+                }
             }
             is ClientCreateResult.Error -> {
                 errors++

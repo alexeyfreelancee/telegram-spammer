@@ -51,7 +51,7 @@ fun Context.sendNotificationPostWatch(  success:Int, errors:Int) {
     val notification = NotificationCompat.Builder(this, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_app)
         .setContentTitle("Telegram Spam")
-        .setContentText("Post watching finished. Success (chats) - $success, Errors (chats)  - $errors")
+        .setContentText("Watching posts finished. Success - $success, Errors  - $errors")
         .setPriority(NotificationCompat.PRIORITY_LOW)
         .setCategory(NotificationCompat.CATEGORY_MESSAGE)
         .build()

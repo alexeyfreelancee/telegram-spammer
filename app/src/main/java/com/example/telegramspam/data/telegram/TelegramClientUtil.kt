@@ -31,13 +31,27 @@ object TelegramClientUtil {
                 ) {
                     if (it is TdApi.Messages) {
                         val idList = LongArray(it.messages.size)
-                        for((i, msg) in it.messages.withIndex()){
+
+                        for ((i, msg) in it.messages.withIndex()) {
                             idList[i] = msg.id
                         }
-                        client.send(TdApi.ViewMessages(chat.id, idList, true)) {result->
-                            if(result is TdApi.Ok) continuation.resume(true) {}
-                            else  continuation.resume(false) {}
+                        client.send(TdApi.OpenChat(chat.id)) { response ->
+                            if (response is TdApi.Ok) {
+                                client.send(TdApi.ViewMessages(chat.id, idList, false)) { result ->
+                                    if (result is TdApi.Ok) {
+                                        client.send(TdApi.CloseChat(chat.id)){}
+                                        continuation.resume(true) {}
+                                    } else {
+                                        continuation.resume(false) {}
+                                    }
+                                }
+                            } else {
+                                continuation.resume(false) {}
+                            }
+
                         }
+
+
                     } else {
                         continuation.resume(false) {}
                     }

@@ -73,7 +73,7 @@ class PostWatchService : Service(){
         startForeground(
             POST_WATCH_ID,
             createServiceNotification(
-                "Joiner is running",
+                "Watching posts...",
                 generateStopAll()
             )
         )

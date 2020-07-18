@@ -16,6 +16,7 @@ import com.example.telegramspam.databinding.JoinerFragmentBinding
 import com.example.telegramspam.models.JoinerSettings
 import com.example.telegramspam.services.JoinerService
 import com.example.telegramspam.services.PostWatchService
+import com.example.telegramspam.utils.log
 import com.example.telegramspam.utils.toast
 import com.google.gson.Gson
 import org.kodein.di.KodeinAware
