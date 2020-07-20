@@ -67,7 +67,7 @@ fun connected(view: View) : Boolean{
     return this[position]
 }
 
-fun generateRandomInt() : Int =  ThreadLocalRandom.current().nextInt(Int.MIN_VALUE, Int.MAX_VALUE - 1)
+fun generateRandomInt() : Int =  Random().nextInt(999999)
 
 
 fun Context.copyToClipboard(string: String) {

