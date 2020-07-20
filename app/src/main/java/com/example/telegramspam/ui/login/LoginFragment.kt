@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
 import com.example.telegramspam.R
 import com.example.telegramspam.databinding.LoginFragmentBinding
+import com.example.telegramspam.ui.MainActivity
 import com.example.telegramspam.utils.toast
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
@@ -23,6 +24,24 @@ class LoginFragment : Fragment(), KodeinAware {
 
     private lateinit var viewModel: LoginViewModel
 
+    override fun onStart() {
+        super.onStart()
+        (requireActivity() as MainActivity).supportActionBar?.hide()
+    }
+    override fun onResume() {
+        super.onResume()
+        (requireActivity() as MainActivity).supportActionBar?.hide()
+    }
+
+    override fun onPause() {
+        (requireActivity() as MainActivity).supportActionBar?.show()
+        super.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        (requireActivity() as MainActivity).supportActionBar?.show()
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
