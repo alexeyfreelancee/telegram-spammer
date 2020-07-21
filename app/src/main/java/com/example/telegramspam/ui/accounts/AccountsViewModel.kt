@@ -24,6 +24,7 @@ class AccountsViewModel(private val repository: Repository) : ViewModel() {
     init {
         checkRegistered()
     }
+
     fun openDeleteDialog(id:Int){
         openDeleteDialog.value = Event(id)
     }

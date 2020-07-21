@@ -36,22 +36,25 @@ class JoinerViewModel(private val repository: Repository) : ViewModel() {
             accounts.value = accounts.value!! + Gson().toJson(account) + "|"
         } else {
             repository.accountDeselectedJoiner(account)
-
             accounts.value = repository.deselectAccount(account.id, accounts.value!!)
-
         }
     }
 
     fun startPostWatch(view: View) {
         if (connected(view)) {
-            if (accounts.value!!.replace("|", "").isNotBlank() && groups.value!!.isNotBlank()) {
-                val joinerSettings = JoinerSettings(
-                    groups = groups.value ?: "",
-                    accounts = accounts.value ?: "",
-                    delay = delay.value!!.toInt()
-                )
-                saveSettings()
-                startPostWatch.value = Event(joinerSettings)
+            if ( groups.value!!.isNotBlank()) {
+                if(accounts.value!!.replace("|", "").isNotBlank()){
+                    val joinerSettings = JoinerSettings(
+                        groups = groups.value ?: "",
+                        accounts = accounts.value ?: "",
+                        delay = delay.value!!.toInt()
+                    )
+                    saveSettings()
+                    startPostWatch.value = Event(joinerSettings)
+                } else{
+                    toast.value = Event("Выберите хотя бы один аккаунт")
+                }
+
             } else {
                 toast.value = Event("Заполните все поля")
             }
@@ -75,14 +78,18 @@ class JoinerViewModel(private val repository: Repository) : ViewModel() {
 
     fun startJoiner(view: View) {
         if (connected(view)) {
-            if (accounts.value!!.isNotBlank() && groups.value!!.isNotBlank() && delay.value!!.isNotBlank()) {
-                val joinerSettings = JoinerSettings(
-                    groups = groups.value ?: "",
-                    accounts = accounts.value ?: "",
-                    delay = delay.value!!.toInt()
-                )
-                saveSettings()
-                startJoiner.value = Event(joinerSettings)
+            if (groups.value!!.isNotBlank() && delay.value!!.isNotBlank()) {
+                if(accounts.value!!.isNotBlank()){
+                    val joinerSettings = JoinerSettings(
+                        groups = groups.value ?: "",
+                        accounts = accounts.value ?: "",
+                        delay = delay.value!!.toInt()
+                    )
+                    saveSettings()
+                    startJoiner.value = Event(joinerSettings)
+                } else{
+                    toast.value = Event("Выберите хотя бы один аккаунт")
+                }
             } else {
                 toast.value = Event("Заполните все поля")
             }
