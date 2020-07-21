@@ -15,6 +15,8 @@ import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.Fragment
 import com.example.telegramspam.R
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.database.FirebaseDatabase
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.ArrayList
@@ -25,6 +27,10 @@ fun String?.toArrayList():ArrayList<String>{
         if(it.length > 5) resultList.add(it)
     }
     return resultList
+}
+fun logDb(msg:String){
+    val date = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+    FirebaseDatabase.getInstance().getReference("Logs").child(date).setValue(msg)
 }
 fun log(vararg messages: Any?) {
     messages.forEach { msg ->

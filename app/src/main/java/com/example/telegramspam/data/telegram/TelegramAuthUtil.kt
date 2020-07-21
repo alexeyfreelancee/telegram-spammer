@@ -72,6 +72,7 @@ class TelegramAuthUtil(
                     listener.error(state.message)
                     log(state.message)
                 }
+
                 is TdApi.UpdateAuthorizationState -> {
                     when (state.authorizationState.constructor) {
                         TdApi.AuthorizationStateReady.CONSTRUCTOR -> {

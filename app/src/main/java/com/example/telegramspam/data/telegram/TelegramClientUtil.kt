@@ -5,6 +5,7 @@ import com.example.telegramspam.API_ID
 import com.example.telegramspam.SOCKS5
 import com.example.telegramspam.models.*
 import com.example.telegramspam.utils.log
+import com.example.telegramspam.utils.logDb
 import com.example.telegramspam.utils.removeEmpty
 import kotlinx.coroutines.*
 import org.drinkless.td.libcore.telegram.Client
@@ -19,40 +20,40 @@ object TelegramClientUtil {
     suspend fun watchPosts(client: Client?, chatUsername: String): Boolean {
         val chat = getChatInfo(client, chatUsername)
         return if (chat != null) {
+            val lastMsgId = chat.lastMessage?.id ?: 0
             suspendCancellableCoroutine { continuation ->
                 client?.send(
                     TdApi.GetChatHistory(
                         chat.id,
-                        chat.lastMessage?.id ?: 0,
+                        lastMsgId,
                         0,
                         100,
                         false
                     )
-                ) {
-                    if (it is TdApi.Messages) {
-                        val idList = LongArray(it.messages.size)
+                ) {response ->
+                    if (response is TdApi.Messages) {
+                        val idList = LongArray(response.messages.size + 1)
 
-                        for ((i, msg) in it.messages.withIndex()) {
+                        for ((i, msg) in response.messages.withIndex()) {
                             idList[i] = msg.id
                         }
-                        client.send(TdApi.OpenChat(chat.id)) { response ->
-                            if (response is TdApi.Ok) {
-                                client.send(TdApi.ViewMessages(chat.id, idList, false)) { result ->
-                                    if (result is TdApi.Ok) {
-                                        client.send(TdApi.CloseChat(chat.id)) {}
-                                        continuation.resume(true) {}
-                                    } else {
-                                        continuation.resume(false) {}
-                                    }
+                        if(lastMsgId != 0L) idList[idList.size - 1] = lastMsgId
+
+                        client.send(TdApi.OpenChat(chat.id)){
+                            if(it is TdApi.Ok){
+                                for (i in 0..5){
+                                    client.send(TdApi.ViewMessages(chat.id, idList, true)) {}
                                 }
-                            } else {
+                                continuation.resume(true){}
+                            }else{
+                                log(it)
+                                if(it is TdApi.Error) logDb(it.message)
                                 continuation.resume(false) {}
                             }
-
                         }
-
-
                     } else {
+                        log(response)
+                        if (response is TdApi.Error) logDb(response.message)
                         continuation.resume(false) {}
                     }
                 }
@@ -75,7 +76,7 @@ object TelegramClientUtil {
                         continuation.resume(true) {}
                     } else {
                         log("add chat member error")
-                        log(it)
+                        if (it is TdApi.Error) logDb(it.message)
                         continuation.resume(false) {}
                     }
                 }
@@ -95,12 +96,12 @@ object TelegramClientUtil {
                         continuation.resume(chatType.userId) {}
                     } else {
                         log("get user error ")
-                        log(chat)
+                        if (chatType is TdApi.Error) logDb(chatType.message)
                         continuation.resume(null) {}
                     }
                 } else {
                     log("get user error")
-                    log(chat)
+                    if (chat is TdApi.Error) logDb(chat.message)
                     continuation.resume(null) {}
                 }
             }
@@ -114,7 +115,7 @@ object TelegramClientUtil {
                 if (it is TdApi.Chat) {
                     continuation.resume(it) {}
                 } else {
-                    log(it)
+                    if (it is TdApi.Error) logDb(it.message)
                     continuation.resume(null) {}
                 }
             }
@@ -130,7 +131,7 @@ object TelegramClientUtil {
                     if (it is TdApi.Ok) {
                         continuation.resume(true) {}
                     } else {
-                        log(it)
+                        if (it is TdApi.Error) logDb(it.message)
                         continuation.resume(false) {}
                     }
                 }
