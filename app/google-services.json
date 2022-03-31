@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "121916645833",
+    "project_id": "telegram-spam-2e7d8",
+    "storage_bucket": "telegram-spam-2e7d8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:121916645833:android:ee26863368690c5cb7c818",
+        "android_client_info": {
+          "package_name": "com.example.telegramspam"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "121916645833-d5kffsjjcfjmv517fgon7l8asm40k8nj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCO4aak0r0u68j6CZiTjR0ulr51Z_pgFbk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "121916645833-d5kffsjjcfjmv517fgon7l8asm40k8nj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
